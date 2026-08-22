@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DAKORI POS</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>DAKORI POS</h1>
+      <p>Sistema de pedidos</p>
+    </div>
+    <div class="order-number">Orden <span id="orderNumber">#001</span></div>
+  </header>
+
+  <main class="app">
+    <section class="catalog">
+      <div class="category-tabs" id="categoryTabs"></div>
+      <div class="products-grid" id="productsGrid"></div>
+    </section>
+
+    <aside class="cart-panel">
+      <div class="cart-header">
+        <div>
+          <h2>Pedido actual</h2>
+          <p id="cartStatus">Agrega productos para comenzar</p>
+        </div>
+        <button class="ghost-btn" id="clearCartBtn">Vaciar</button>
+      </div>
+
+      <div class="cart-items" id="cartItems"></div>
+
+      <div class="cart-summary">
+        <div class="summary-line">
+          <span>Subtotal</span>
+          <strong id="subtotal">$0.00</strong>
+        </div>
+        <div class="summary-line total-line">
+          <span>TOTAL</span>
+          <strong id="total">$0.00</strong>
+        </div>
+
+        <label class="payment-label" for="paymentMethod">Método de pago</label>
+        <select id="paymentMethod">
+          <option value="Efectivo">Efectivo</option>
+          <option value="Transferencia">Transferencia</option>
+          <option value="Tarjeta">Tarjeta</option>
+        </select>
+
+        <button class="finish-btn" id="finishOrderBtn">Finalizar orden</button>
+      </div>
+    </aside>
+  </main>
+
+  <section class="history-section">
+    <div class="history-header">
+      <div>
+        <h2>Historial de hoy</h2>
+        <p>Las órdenes se guardan en este navegador.</p>
+      </div>
+      <button class="ghost-btn" id="clearHistoryBtn">Limpiar historial</button>
+    </div>
+
+    <div class="history-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Orden</th>
+            <th>Hora</th>
+            <th>Productos</th>
+            <th>Pago</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody id="historyBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
