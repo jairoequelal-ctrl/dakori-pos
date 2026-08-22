@@ -1,3 +1,5 @@
+const SUPABASE_URL = "https://cveyhhgcljyxibqtgost.supabase.co";
+const SUPABASE_KEY = "sb_publishable_-8M32lNeLrCzFfLq319C8Q_bmZnBVB-";
 const products = [
   { id: 1, name: "Minidakori", category: "Chicken", price: 1.50, sample: false },
   { id: 2, name: "Medikori", category: "Chicken", price: 3.50, sample: false },
