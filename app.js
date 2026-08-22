@@ -1,8 +1,10 @@
 const SUPABASE_URL = "https://cveyhhgcljyxibqtgost.supabase.co";
 const SUPABASE_KEY = "sb_publishable_-8M32lNeLrCzFfLq319C8Q_bmZnBVB-";
 
+let products = [];
 let activeCategory = "Todos";
 let cart = [];
+let nextOrderNumber = 1;
 
 const categories = ["Todos", ...new Set(products.map(p => p.category))];
 
