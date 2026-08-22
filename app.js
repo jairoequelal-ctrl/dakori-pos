@@ -6,8 +6,6 @@ let activeCategory = "Todos";
 let cart = [];
 let nextOrderNumber = 1;
 
-const categories = ["Todos", ...new Set(products.map(p => p.category))];
-
 const categoryTabs = document.getElementById("categoryTabs");
 const productsGrid = document.getElementById("productsGrid");
 const cartItems = document.getElementById("cartItems");
@@ -46,6 +44,7 @@ function refreshOrderNumber(){
 }
 
 function renderCategories(){
+  const categories = ["Todos", ...new Set(products.map(p => p.category))];
   categoryTabs.innerHTML = "";
 
   categories.forEach(category => {
