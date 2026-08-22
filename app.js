@@ -1,19 +1,5 @@
 const SUPABASE_URL = "https://cveyhhgcljyxibqtgost.supabase.co";
 const SUPABASE_KEY = "sb_publishable_-8M32lNeLrCzFfLq319C8Q_bmZnBVB-";
-const products = [
-  { id: 1, name: "Minidakori", category: "Chicken", price: 1.50, sample: false },
-  { id: 2, name: "Medikori", category: "Chicken", price: 3.50, sample: false },
-  { id: 3, name: "Dakori completo", category: "Chicken", price: 5.00, sample: false },
-
-  { id: 4, name: "Ramen clásico", category: "Ramen", price: 3.00, sample: true },
-  { id: 5, name: "Ramen picante", category: "Ramen", price: 3.50, sample: true },
-
-  { id: 6, name: "Gaseosa", category: "Bebidas", price: 1.00, sample: true },
-  { id: 7, name: "Agua", category: "Bebidas", price: 0.75, sample: true },
-
-  { id: 8, name: "Snack coreano", category: "Snacks", price: 1.50, sample: true },
-  { id: 9, name: "Pocky", category: "Snacks", price: 2.00, sample: true }
-];
 
 let activeCategory = "Todos";
 let cart = [];
