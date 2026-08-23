@@ -1,5 +1,5 @@
-const SUPABASE_URL = "PEGA_AQUI_TU_PROJECT_URL";
-const SUPABASE_KEY = "PEGA_AQUI_TU_PUBLISHABLE_KEY";
+const SUPABASE_URL = "https://cveyhhgcljyxibqtgost.supabase.co";
+const SUPABASE_KEY = "sb_publishable_-8M32lNeLrCzFfLq319C8Q_bmZnBVB-";
 
 
 function headers(extra = {}) {
