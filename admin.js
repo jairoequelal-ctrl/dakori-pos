@@ -43,11 +43,9 @@ async function api(path, options = {}) {
 
     const text = await response.text();
 
-
     if (!text) {
         return null;
     }
-
 
     return JSON.parse(text);
 
@@ -265,6 +263,21 @@ async function loadProducts() {
 
                         </button>
 
+
+                        <button
+                            class="admin-btn"
+                            style="
+                                background:#b33;
+                                color:white;
+                            "
+                            onclick='deleteProduct(
+                                ${product.id},
+                                ${JSON.stringify(product.nombre)}
+                            )'
+                        >
+                            Eliminar
+                        </button>
+
                     </div>
 
                 </div>
@@ -456,6 +469,67 @@ async function toggleProduct(
 
         alert(
             "No se pudo cambiar el estado del producto."
+        );
+
+    }
+
+}
+
+
+async function deleteProduct(
+    id,
+    nombre
+) {
+
+    const confirmed =
+        confirm(
+            `¿Seguro que deseas eliminar "${nombre}"?\n\nEsta acción no se puede deshacer.`
+        );
+
+
+    if (!confirmed) {
+        return;
+    }
+
+
+    try {
+
+        await api(
+            `productos?id=eq.${id}`,
+            {
+
+                method:
+                    "DELETE",
+
+                headers: {
+
+                    Prefer:
+                        "return=minimal"
+
+                }
+
+            }
+        );
+
+
+        alert(
+            "Producto eliminado correctamente."
+        );
+
+
+        await loadProducts();
+
+
+    } catch (error) {
+
+        console.error(
+            "Error eliminando producto:",
+            error
+        );
+
+
+        alert(
+            "No se pudo eliminar el producto. Puede tener ventas asociadas. En ese caso, desactívalo."
         );
 
     }
