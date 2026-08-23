@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DAKORI Admin</title>
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    .admin-container{
+      max-width:1200px;
+      margin:0 auto;
+      padding:28px;
+    }
+
+    .admin-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:25px;
+      gap:20px;
+    }
+
+    .admin-header h1{
+      margin:0;
+      color:#17304b;
+    }
+
+    .admin-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:22px;
+    }
+
+    .admin-card{
+      background:white;
+      border:1px solid #eadfd8;
+      border-radius:18px;
+      padding:20px;
+      box-shadow:0 10px 28px rgba(23,48,75,.08);
+    }
+
+    .admin-card h2{
+      margin-top:0;
+      color:#17304b;
+    }
+
+    .form-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+
+    .form-group{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+
+    .form-group.full{
+      grid-column:1/-1;
+    }
+
+    input,
+    select{
+      padding:11px;
+      border:1px solid #ddd;
+      border-radius:10px;
+      font:inherit;
+    }
+
+    .admin-btn{
+      border:0;
+      border-radius:10px;
+      padding:11px 14px;
+      cursor:pointer;
+      font-weight:700;
+    }
+
+    .primary{
+      background:#c7363d;
+      color:white;
+    }
+
+    .secondary{
+      background:#17304b;
+      color:white;
+    }
+
+    .product-row{
+      display:grid;
+      grid-template-columns:1.5fr 1fr .8fr .7fr auto;
+      gap:10px;
+      align-items:center;
+      padding:12px 0;
+      border-bottom:1px solid #eee;
+    }
+
+    .product-row input{
+      width:100%;
+    }
+
+    .status-active{
+      color:#1f7a4f;
+      font-weight:700;
+    }
+
+    .status-inactive{
+      color:#b33;
+      font-weight:700;
+    }
+
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:15px;
+      margin-bottom:22px;
+    }
+
+    .stat{
+      background:#17304b;
+      color:white;
+      border-radius:15px;
+      padding:18px;
+    }
+
+    .stat span{
+      display:block;
+      opacity:.8;
+      font-size:.85rem;
+    }
+
+    .stat strong{
+      display:block;
+      margin-top:6px;
+      font-size:1.5rem;
+    }
+
+    @media(max-width:800px){
+      .admin-grid{
+        grid-template-columns:1fr;
+      }
+
+      .form-grid{
+        grid-template-columns:1fr;
+      }
+
+      .stats{
+        grid-template-columns:1fr;
+      }
+
+      .product-row{
+        grid-template-columns:1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header class="topbar">
+  <div>
+    <h1>DAKORI ADMIN</h1>
+    <p>Administración del POS</p>
+  </div>
+
+  <a href="index.html" style="color:white;text-decoration:none;font-weight:700;">
+    Volver al POS
+  </a>
+</header>
+
+
+<main class="admin-container">
+
+  <section class="stats">
+    <div class="stat">
+      <span>Ventas registradas</span>
+      <strong id="totalOrders">0</strong>
+    </div>
+
+    <div class="stat">
+      <span>Total vendido</span>
+      <strong id="totalSales">$0.00</strong>
+    </div>
+
+    <div class="stat">
+      <span>Productos activos</span>
+      <strong id="activeProducts">0</strong>
+    </div>
+  </section>
+
+
+  <section class="admin-grid">
+
+    <div class="admin-card">
+
+      <h2>Agregar producto</h2>
+
+      <div class="form-grid">
+
+        <div class="form-group">
+          <label>Nombre</label>
+          <input id="newName" type="text">
+        </div>
+
+        <div class="form-group">
+          <label>Categoría</label>
+          <select id="newCategory">
+            <option>Chicken</option>
+            <option>Ramen</option>
+            <option>Bebidas</option>
+            <option>Snacks</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Precio</label>
+          <input id="newPrice" type="number" step="0.01">
+        </div>
+
+        <div class="form-group">
+          <label>Producto de prueba</label>
+          <select id="newSample">
+            <option value="false">No</option>
+            <option value="true">Sí</option>
+          </select>
+        </div>
+
+        <div class="form-group full">
+          <button class="admin-btn primary" id="addProductBtn">
+            Agregar producto
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="admin-card">
+
+      <h2>Resumen</h2>
+
+      <p>
+        Desde aquí podrás cambiar precios y administrar qué productos
+        aparecen en el POS.
+      </p>
+
+      <p>
+        Los cambios se guardarán directamente en Supabase.
+      </p>
+
+    </div>
+
+  </section>
+
+
+  <section class="admin-card" style="margin-top:22px;">
+
+    <h2>Productos</h2>
+
+    <div id="adminProducts">
+      Cargando...
+    </div>
+
+  </section>
+
+
+  <section class="admin-card" style="margin-top:22px;">
+
+    <h2>Últimas órdenes</h2>
+
+    <div class="history-table-wrap">
+
+      <table>
+
+        <thead>
+          <tr>
+            <th>Orden</th>
+            <th>Fecha</th>
+            <th>Pago</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+
+        <tbody id="adminOrders"></tbody>
+
+      </table>
+
+    </div>
+
+  </section>
+
+</main>
+
+<script src="admin.js"></script>
+
+</body>
+</html>
