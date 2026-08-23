@@ -10,12 +10,371 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>DAKORI POS</title>
+    <title>DAKORI</title>
 
-    <link
-        rel="stylesheet"
-        href="style.css"
-    >
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #fff8f2 0%,
+                    #f8eee6 100%
+                );
+
+            color: #17304b;
+        }
+
+
+        /* ==============================================
+           ENCABEZADO
+        ============================================== */
+
+        .header {
+            background: #17304b;
+            color: white;
+
+            padding: 24px 30px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            box-shadow:
+                0 4px 15px
+                rgba(0,0,0,.12);
+        }
+
+
+        .brand h1 {
+            margin: 0;
+
+            font-size: 2rem;
+            font-weight: 900;
+
+            letter-spacing: 2px;
+        }
+
+
+        .brand p {
+            margin: 5px 0 0;
+
+            font-size: .9rem;
+            opacity: .75;
+        }
+
+
+        .system-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            font-size: .85rem;
+            opacity: .8;
+        }
+
+
+        .status-dot {
+            width: 9px;
+            height: 9px;
+
+            border-radius: 50%;
+
+            background: #55d68b;
+        }
+
+
+        /* ==============================================
+           CONTENIDO
+        ============================================== */
+
+        .main {
+            width: 100%;
+            max-width: 1150px;
+
+            margin: 0 auto;
+
+            padding: 65px 25px;
+        }
+
+
+        .welcome {
+            text-align: center;
+
+            margin-bottom: 45px;
+        }
+
+
+        .welcome h2 {
+            margin: 0 0 10px;
+
+            font-size: 2.1rem;
+            font-weight: 900;
+
+            color: #17304b;
+        }
+
+
+        .welcome p {
+            margin: 0;
+
+            color: #68727c;
+
+            font-size: 1rem;
+        }
+
+
+        /* ==============================================
+           OPCIONES
+        ============================================== */
+
+        .options {
+            display: grid;
+
+            grid-template-columns:
+                repeat(2, 1fr);
+
+            gap: 22px;
+        }
+
+
+        .option-card {
+            position: relative;
+
+            min-height: 210px;
+
+            background: white;
+
+            border:
+                1px solid
+                rgba(23,48,75,.08);
+
+            border-radius: 22px;
+
+            padding: 28px;
+
+            text-decoration: none;
+
+            color: #17304b;
+
+            box-shadow:
+                0 10px 30px
+                rgba(23,48,75,.08);
+
+            transition:
+                transform .18s ease,
+                box-shadow .18s ease,
+                border-color .18s ease;
+
+            overflow: hidden;
+        }
+
+
+        .option-card:hover {
+            transform:
+                translateY(-5px);
+
+            box-shadow:
+                0 16px 38px
+                rgba(23,48,75,.15);
+
+            border-color:
+                rgba(23,48,75,.2);
+        }
+
+
+        .option-card::after {
+            content: "";
+
+            position: absolute;
+
+            right: -30px;
+            bottom: -45px;
+
+            width: 130px;
+            height: 130px;
+
+            border-radius: 50%;
+
+            background:
+                rgba(239,127,165,.10);
+        }
+
+
+        .icon {
+            width: 58px;
+            height: 58px;
+
+            border-radius: 16px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            margin-bottom: 22px;
+
+            font-size: 1.8rem;
+
+            background: #fff0f5;
+        }
+
+
+        .option-card h3 {
+            margin: 0 0 8px;
+
+            font-size: 1.35rem;
+            font-weight: 900;
+        }
+
+
+        .option-card p {
+            margin: 0;
+
+            color: #68727c;
+
+            line-height: 1.5;
+
+            max-width: 380px;
+        }
+
+
+        .arrow {
+            position: absolute;
+
+            right: 25px;
+            top: 28px;
+
+            width: 35px;
+            height: 35px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 50%;
+
+            background: #f4f5f7;
+
+            color: #17304b;
+
+            font-weight: bold;
+
+            transition:
+                background .18s ease,
+                color .18s ease;
+        }
+
+
+        .option-card:hover .arrow {
+            background: #17304b;
+            color: white;
+        }
+
+
+        /* ==============================================
+           COLORES POR ÁREA
+        ============================================== */
+
+        .menu-card .icon {
+            background: #fff0f5;
+        }
+
+
+        .kitchen-card .icon {
+            background: #fff3df;
+        }
+
+
+        .payment-card .icon {
+            background: #e9f6ee;
+        }
+
+
+        .admin-card .icon {
+            background: #e9eef5;
+        }
+
+
+        /* ==============================================
+           PIE
+        ============================================== */
+
+        .footer {
+            text-align: center;
+
+            padding:
+                10px 20px 30px;
+
+            color: #8a929a;
+
+            font-size: .8rem;
+        }
+
+
+        /* ==============================================
+           RESPONSIVE
+        ============================================== */
+
+        @media(max-width: 750px) {
+
+            .header {
+                padding:
+                    20px;
+            }
+
+
+            .brand h1 {
+                font-size:
+                    1.6rem;
+            }
+
+
+            .system-status {
+                display: none;
+            }
+
+
+            .main {
+                padding:
+                    40px 16px;
+            }
+
+
+            .welcome h2 {
+                font-size:
+                    1.7rem;
+            }
+
+
+            .options {
+                grid-template-columns:
+                    1fr;
+            }
+
+
+            .option-card {
+                min-height:
+                    180px;
+
+                padding:
+                    24px;
+            }
+
+        }
+
+    </style>
 
 </head>
 
@@ -23,282 +382,194 @@
 <body>
 
 
-<header class="topbar">
+<header class="header">
 
-    <div>
+    <div class="brand">
 
         <h1>
-            DAKORI POS
+            DAKORI
         </h1>
 
         <p>
-            Sistema de pedidos
+            Sistema de gestión
         </p>
 
     </div>
 
 
-    <div class="order-number">
+    <div class="system-status">
 
-        Orden
+        <span class="status-dot"></span>
 
-        <span id="orderNumber">
-            #001
-        </span>
+        Sistema operativo
 
     </div>
 
 </header>
 
 
-<main class="app">
+<main class="main">
 
 
-    <!-- PRODUCTOS -->
+    <section class="welcome">
 
-    <section class="catalog">
+        <h2>
+            ¿Qué deseas hacer?
+        </h2>
 
-        <div
-            class="category-tabs"
-            id="categoryTabs"
-        ></div>
-
-
-        <div
-            class="products-grid"
-            id="productsGrid"
-        ></div>
+        <p>
+            Selecciona una opción para continuar.
+        </p>
 
     </section>
 
 
-    <!-- CARRITO -->
-
-    <aside class="cart-panel">
+    <section class="options">
 
 
-        <div class="cart-header">
+        <!-- ==========================================
+             MENÚ / POS
+        =========================================== -->
 
-            <div>
+        <a
+            href="menu.html"
+            class="option-card menu-card"
+        >
 
-                <h2>
-                    Pedido actual
-                </h2>
+            <span class="arrow">
+                →
+            </span>
 
-                <p id="cartStatus">
 
-                    Agrega productos para comenzar
-
-                </p>
-
+            <div class="icon">
+                🍗
             </div>
 
 
-            <button
-                class="ghost-btn"
-                id="clearCartBtn"
-            >
-                Vaciar
-            </button>
-
-        </div>
+            <h3>
+                Menú / POS
+            </h3>
 
 
-        <div
-            class="cart-items"
-            id="cartItems"
-        ></div>
+            <p>
+                Registra nuevos pedidos,
+                selecciona productos y
+                define el método de pago.
+            </p>
+
+        </a>
 
 
-        <div class="cart-summary">
+        <!-- ==========================================
+             COCINA
+        =========================================== -->
+
+        <a
+            href="cocina.html"
+            class="option-card kitchen-card"
+        >
+
+            <span class="arrow">
+                →
+            </span>
 
 
-            <div class="summary-line">
-
-                <span>
-                    Subtotal
-                </span>
-
-                <strong id="subtotal">
-                    $0.00
-                </strong>
-
+            <div class="icon">
+                🍳
             </div>
 
 
-            <div class="summary-line total-line">
+            <h3>
+                Cocina
+            </h3>
 
-                <span>
-                    TOTAL
-                </span>
 
-                <strong id="total">
-                    $0.00
-                </strong>
+            <p>
+                Revisa los pedidos pendientes,
+                inicia su preparación y
+                controla las entregas.
+            </p>
 
+        </a>
+
+
+        <!-- ==========================================
+             COBROS
+        =========================================== -->
+
+        <a
+            href="cobros.html"
+            class="option-card payment-card"
+        >
+
+            <span class="arrow">
+                →
+            </span>
+
+
+            <div class="icon">
+                💳
             </div>
 
 
-            <!-- MOMENTO DE PAGO -->
-
-            <label
-                class="payment-label"
-                for="paymentMoment"
-            >
-                ¿Cuándo pagará?
-            </label>
+            <h3>
+                Cobros
+            </h3>
 
 
-            <select id="paymentMoment">
+            <p>
+                Consulta pedidos pendientes
+                de pago y registra los
+                cobros realizados.
+            </p>
 
-                <option value="Antes">
-                    Pagar ahora
-                </option>
-
-                <option value="Después">
-                    Pagar después de comer
-                </option>
-
-            </select>
+        </a>
 
 
-            <!-- MÉTODO DE PAGO -->
+        <!-- ==========================================
+             ADMINISTRACIÓN
+        =========================================== -->
 
-            <div id="paymentMethodContainer">
+        <a
+            href="admin.html"
+            class="option-card admin-card"
+        >
 
-                <label
-                    class="payment-label"
-                    for="paymentMethod"
-                >
-                    Método de pago
-                </label>
+            <span class="arrow">
+                →
+            </span>
 
 
-                <select id="paymentMethod">
-
-                    <option value="Efectivo">
-                        Efectivo
-                    </option>
-
-                    <option value="Transferencia">
-                        Transferencia
-                    </option>
-
-                    <option value="Tarjeta">
-                        Tarjeta
-                    </option>
-
-                </select>
-
+            <div class="icon">
+                ⚙️
             </div>
 
 
-            <button
-                class="finish-btn"
-                id="finishOrderBtn"
-            >
-                Registrar pedido
-            </button>
+            <h3>
+                Administración
+            </h3>
 
 
-        </div>
+            <p>
+                Gestiona productos,
+                inventario, ventas,
+                caja y cierres.
+            </p>
 
-    </aside>
+        </a>
+
+
+    </section>
+
 
 </main>
 
 
-<!-- HISTORIAL -->
+<footer class="footer">
 
-<section class="history-section">
+    DAKORI POS · Sistema de gestión
 
-
-    <div class="history-header">
-
-        <div>
-
-            <h2>
-                Historial de pedidos
-            </h2>
-
-            <p>
-                Pedidos registrados en el sistema.
-            </p>
-
-        </div>
-
-
-        <button
-            class="ghost-btn"
-            id="clearHistoryBtn"
-            disabled
-        >
-            Historial online
-        </button>
-
-    </div>
-
-
-    <div class="history-table-wrap">
-
-
-        <table>
-
-
-            <thead>
-
-                <tr>
-
-                    <th>
-                        Orden
-                    </th>
-
-                    <th>
-                        Hora
-                    </th>
-
-                    <th>
-                        Productos
-                    </th>
-
-                    <th>
-                        Pedido
-                    </th>
-
-                    <th>
-                        Pago
-                    </th>
-
-                    <th>
-                        Total
-                    </th>
-
-                </tr>
-
-            </thead>
-
-
-            <tbody id="historyBody">
-
-            </tbody>
-
-
-        </table>
-
-
-    </div>
-
-
-</section>
-
-
-<div
-    class="toast"
-    id="toast"
-></div>
-
-
-<script src="app.js"></script>
+</footer>
 
 
 </body>
