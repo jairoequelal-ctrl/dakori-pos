@@ -45,13 +45,13 @@
                 rgba(23,48,75,.08);
         }
 
-        .admin-card h2 {
-            margin-top: 0;
+        .admin-card h2,
+        .admin-card h3 {
             color: #17304b;
         }
 
-        .admin-card h3 {
-            color: #17304b;
+        .admin-card h2 {
+            margin-top: 0;
         }
 
         .admin-grid {
@@ -123,6 +123,65 @@
             gap: 6px;
         }
 
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4,1fr);
+            gap: 15px;
+            margin-bottom: 22px;
+        }
+
+        .stat {
+            background: #17304b;
+            color: white;
+            border-radius: 15px;
+            padding: 18px;
+        }
+
+        .stat span {
+            display: block;
+            opacity: .8;
+            font-size: .85rem;
+        }
+
+        .stat strong {
+            display: block;
+            margin-top: 6px;
+            font-size: 1.5rem;
+        }
+
+        .open-cash-stat {
+            background: #c7363d;
+        }
+
+        .cash-stats {
+            display: grid;
+            grid-template-columns: repeat(6,1fr);
+            gap: 14px;
+            margin-top: 18px;
+        }
+
+        .cash-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 28px;
+            margin-top: 28px;
+        }
+
+        .cash-info {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .last-closing-box {
+            background: #fff8f2;
+            border: 1px solid #eadfd8;
+            border-radius: 12px;
+            padding: 13px;
+            margin: 15px 0;
+            color: #17304b;
+            font-weight: 600;
+        }
+
         .product-row {
 
             display: grid;
@@ -136,9 +195,7 @@
                 1.6fr;
 
             gap: 10px;
-
             align-items: center;
-
             padding: 12px 0;
 
             border-bottom: 1px solid #eee;
@@ -171,149 +228,37 @@
             font-weight: 800;
         }
 
-        .stats {
-
-            display: grid;
-
-            grid-template-columns:
-                repeat(4, 1fr);
-
-            gap: 15px;
-
-            margin-bottom: 22px;
-        }
-
-        .cash-stats {
-
-            display: grid;
-
-            grid-template-columns:
-                repeat(6, 1fr);
-
-            gap: 14px;
-
-            margin-top: 18px;
-        }
-
-        .stat {
-
-            background: #17304b;
-
-            color: white;
-
-            border-radius: 15px;
-
-            padding: 18px;
-        }
-
-        .stat span {
-
-            display: block;
-
-            opacity: .8;
-
-            font-size: .85rem;
-        }
-
-        .stat strong {
-
-            display: block;
-
-            margin-top: 6px;
-
-            font-size: 1.5rem;
-        }
-
-        .open-cash-stat {
-            background: #c7363d;
-        }
-
-        .cash-grid {
-
-            display: grid;
-
-            grid-template-columns:
-                1fr 1fr;
-
-            gap: 28px;
-
-            margin-top: 28px;
-        }
-
-        .cash-info {
-
-            color: #666;
-
-            line-height: 1.6;
-        }
-
-        .last-closing-box {
-
-            background: #fff8f2;
-
-            border: 1px solid #eadfd8;
-
-            border-radius: 12px;
-
-            padding: 13px;
-
-            margin: 15px 0;
-
-            color: #17304b;
-
-            font-weight: 600;
-        }
-
         .top-actions {
-
             display: flex;
-
             align-items: center;
-
             gap: 12px;
         }
 
         .top-actions a {
-
             color: white;
-
             text-decoration: none;
-
             font-weight: 700;
         }
 
         .logout-btn {
-
             border: 0;
-
             background: #ef7fa5;
-
             color: #17304b;
-
             padding: 10px 14px;
-
             border-radius: 10px;
-
             font-weight: 800;
-
             cursor: pointer;
         }
 
         .admin-user {
-
             font-size: .8rem;
-
             color: #d9e0e8;
-
             margin-top: 5px;
         }
 
         .ranking-row {
-
             display: flex;
-
             justify-content: space-between;
-
             align-items: center;
 
             padding: 11px 0;
@@ -326,11 +271,9 @@
             display: inline-flex;
 
             align-items: center;
-
             justify-content: center;
 
             width: 28px;
-
             height: 28px;
 
             border-radius: 50%;
@@ -344,27 +287,54 @@
             margin-right: 8px;
         }
 
-        .history-table-wrap {
+        .report-filters {
 
+            display: grid;
+
+            grid-template-columns:
+                repeat(auto-fit,minmax(180px,1fr));
+
+            gap: 14px;
+
+            margin-bottom: 20px;
+        }
+
+        .report-stats {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(auto-fit,minmax(160px,1fr));
+
+            gap: 14px;
+        }
+
+        .report-grid {
+
+            display: grid;
+
+            grid-template-columns:
+                1fr 1fr;
+
+            gap: 26px;
+
+            margin-top: 26px;
+        }
+
+        .history-table-wrap {
             overflow-x: auto;
         }
 
         table {
-
             width: 100%;
-
             border-collapse: collapse;
         }
 
         th,
         td {
-
             padding: 12px;
-
             border-bottom: 1px solid #eee;
-
             text-align: left;
-
             white-space: nowrap;
         }
 
@@ -372,45 +342,34 @@
             color: #17304b;
         }
 
-        @media(max-width: 1100px) {
+        @media(max-width:1100px) {
 
             .cash-stats {
                 grid-template-columns:
-                    repeat(3, 1fr);
+                    repeat(3,1fr);
             }
 
         }
 
-        @media(max-width: 950px) {
+        @media(max-width:950px) {
 
-            .admin-grid {
+            .admin-grid,
+            .cash-grid,
+            .report-grid {
                 grid-template-columns: 1fr;
             }
 
-            .cash-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .stats {
-                grid-template-columns:
-                    repeat(2, 1fr);
-            }
-
+            .stats,
             .cash-stats {
                 grid-template-columns:
-                    repeat(2, 1fr);
+                    repeat(2,1fr);
             }
 
             .product-row {
-
                 grid-template-columns: 1fr;
-
                 border: 1px solid #eee;
-
                 border-radius: 14px;
-
                 padding: 14px;
-
                 margin-bottom: 12px;
             }
 
@@ -420,16 +379,13 @@
 
         }
 
-        @media(max-width: 560px) {
+        @media(max-width:560px) {
 
             .admin-container {
                 padding: 16px;
             }
 
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-
+            .form-grid,
             .stats,
             .cash-stats {
                 grid-template-columns: 1fr;
@@ -473,7 +429,19 @@
     <div class="top-actions">
 
         <a href="index.html">
-            Ir al Inicio
+            Inicio
+        </a>
+
+        <a href="menu.html">
+            POS
+        </a>
+
+        <a href="cocina.html">
+            Cocina
+        </a>
+
+        <a href="cobros.html">
+            Cobros
         </a>
 
         <button
@@ -491,11 +459,10 @@
 <main class="admin-container">
 
 
-    <!-- RESUMEN GENERAL -->
+    <!-- RESUMEN -->
 
 
     <section class="stats">
-
 
         <div class="stat">
 
@@ -548,11 +515,10 @@
 
         </div>
 
-
     </section>
 
 
-    <!-- CAJA DEL DÍA -->
+    <!-- CAJA -->
 
 
     <section class="admin-card">
@@ -564,11 +530,10 @@
 
         <div class="cash-stats">
 
-
             <div class="stat">
 
                 <span>
-                    Órdenes de hoy
+                    Cobros de hoy
                 </span>
 
                 <strong id="todayOrders">
@@ -581,7 +546,7 @@
             <div class="stat">
 
                 <span>
-                    Total de hoy
+                    Total cobrado hoy
                 </span>
 
                 <strong id="todayTotal">
@@ -633,7 +598,7 @@
             <div class="stat open-cash-stat">
 
                 <span>
-                    Caja Pendiente
+                    Pendiente de cierre
                 </span>
 
                 <strong id="openCashTotal">
@@ -641,7 +606,6 @@
                 </strong>
 
             </div>
-
 
         </div>
 
@@ -668,7 +632,6 @@
                     Cierre de caja
                 </h3>
 
-
                 <div
                     id="lastClosingInfo"
                     class="last-closing-box"
@@ -676,21 +639,11 @@
                     Buscando último cierre...
                 </div>
 
-
                 <p class="cash-info">
 
-                    El cierre incluirá únicamente
-                    las ventas realizadas desde
-                    el último cierre registrado.
-
-                </p>
-
-
-                <p class="cash-info">
-
-                    Si no existen nuevas ventas,
-                    el sistema no permitirá crear
-                    otro cierre.
+                    El cierre incluye únicamente
+                    los cobros realizados después
+                    del último cierre.
 
                 </p>
 
@@ -704,13 +657,12 @@
 
             </div>
 
-
         </div>
 
     </section>
 
 
-    <!-- HISTORIAL DE CIERRES -->
+    <!-- HISTORIAL CIERRES -->
 
 
     <section
@@ -719,7 +671,7 @@
     >
 
         <h2>
-            Historial de cierres de caja
+            Historial de cierres
         </h2>
 
 
@@ -744,7 +696,7 @@
                         </th>
 
                         <th>
-                            Órdenes
+                            Cobros
                         </th>
 
                         <th>
@@ -783,6 +735,186 @@
     </section>
 
 
+    <!-- REPORTES -->
+
+
+    <section
+        class="admin-card"
+        style="margin-top:22px;"
+    >
+
+        <h2>
+            Reportes
+        </h2>
+
+
+        <div class="report-filters">
+
+
+            <div class="form-group">
+
+                <label for="reportFrom">
+                    Desde
+                </label>
+
+                <input
+                    type="date"
+                    id="reportFrom"
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="reportTo">
+                    Hasta
+                </label>
+
+                <input
+                    type="date"
+                    id="reportTo"
+                >
+
+            </div>
+
+
+            <div
+                style="
+                    display:flex;
+                    align-items:flex-end;
+                "
+            >
+
+                <button
+                    id="generateReportBtn"
+                    class="admin-btn secondary"
+                    style="width:100%;"
+                >
+                    Generar reporte
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <div class="report-stats">
+
+
+            <div class="stat">
+
+                <span>
+                    Ventas cobradas
+                </span>
+
+                <strong id="reportSales">
+                    $0.00
+                </strong>
+
+            </div>
+
+
+            <div class="stat">
+
+                <span>
+                    Órdenes pagadas
+                </span>
+
+                <strong id="reportOrders">
+                    0
+                </strong>
+
+            </div>
+
+
+            <div class="stat">
+
+                <span>
+                    Pendiente por cobrar
+                </span>
+
+                <strong id="reportPending">
+                    $0.00
+                </strong>
+
+            </div>
+
+
+            <div class="stat">
+
+                <span>
+                    Efectivo
+                </span>
+
+                <strong id="reportCash">
+                    $0.00
+                </strong>
+
+            </div>
+
+
+            <div class="stat">
+
+                <span>
+                    Transferencia
+                </span>
+
+                <strong id="reportTransfer">
+                    $0.00
+                </strong>
+
+            </div>
+
+
+            <div class="stat">
+
+                <span>
+                    Tarjeta
+                </span>
+
+                <strong id="reportCard">
+                    $0.00
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <div class="report-grid">
+
+
+            <div>
+
+                <h3>
+                    Productos más vendidos
+                </h3>
+
+                <div id="reportTopProducts">
+                    Selecciona un rango.
+                </div>
+
+            </div>
+
+
+            <div>
+
+                <h3>
+                    Ventas por categoría
+                </h3>
+
+                <div id="reportCategories">
+                    Selecciona un rango.
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
     <!-- AGREGAR PRODUCTO -->
 
 
@@ -791,9 +923,7 @@
         style="margin-top:22px;"
     >
 
-
         <div class="admin-card">
-
 
             <h2>
                 Agregar producto
@@ -812,7 +942,6 @@
                     <input
                         id="newName"
                         type="text"
-                        placeholder="Ej. Ramen Shin"
                     >
 
                 </div>
@@ -936,48 +1065,33 @@
 
             </div>
 
-
         </div>
 
 
         <div class="admin-card">
 
-
             <h2>
                 Inventario
             </h2>
 
-
-            <p>
-                Desde este panel puedes modificar
-                productos, precios y cantidades.
-            </p>
-
-
             <p>
                 El stock se descuenta automáticamente
-                cuando se finaliza una venta.
+                al registrar una venta.
             </p>
 
-
             <p>
-                Cuando el stock llega a cero,
-                el producto aparece como
-                <strong>AGOTADO</strong>
-                en el POS.
+                Puedes modificar existencias,
+                precios y categorías desde aquí.
             </p>
 
-
             <p>
-                Si un producto tiene ventas asociadas,
-                utiliza
+                Si un producto ya tiene ventas
+                asociadas, utiliza
                 <strong>Desactivar</strong>
                 en lugar de eliminarlo.
             </p>
 
-
         </div>
-
 
     </section>
 
@@ -989,7 +1103,6 @@
         class="admin-card"
         style="margin-top:22px;"
     >
-
 
         <h2>
             Productos
@@ -1031,18 +1144,16 @@
             Cargando...
         </div>
 
-
     </section>
 
 
-    <!-- HISTORIAL DE ÓRDENES -->
+    <!-- ÓRDENES -->
 
 
     <section
         class="admin-card"
         style="margin-top:22px;"
     >
-
 
         <h2>
             Últimas órdenes
@@ -1086,7 +1197,6 @@
 
         </div>
 
-
     </section>
 
 
@@ -1094,7 +1204,6 @@
 
 
 <script src="admin.js"></script>
-
 
 </body>
 

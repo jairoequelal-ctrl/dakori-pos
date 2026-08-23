@@ -1,11 +1,6 @@
 // ======================================================
 // DAKORI ADMIN
-// Login + productos + inventario + ventas + caja
-// ======================================================
-
-
-// ======================================================
-// CONFIGURACIÓN SUPABASE
+// Inventario + caja + reportes
 // ======================================================
 
 const SUPABASE_URL =
@@ -38,10 +33,6 @@ function getStoredSession() {
 }
 
 
-// ======================================================
-// RENOVAR SESIÓN
-// ======================================================
-
 async function refreshSession() {
 
     const session =
@@ -67,8 +58,7 @@ async function refreshSession() {
 
                 {
 
-                    method:
-                        "POST",
+                    method: "POST",
 
                     headers: {
 
@@ -94,10 +84,6 @@ async function refreshSession() {
 
 
         if (!response.ok) {
-
-            console.error(
-                "No se pudo renovar la sesión."
-            );
 
             return false;
 
@@ -159,10 +145,6 @@ async function refreshSession() {
 }
 
 
-// ======================================================
-// CERRAR SESIÓN
-// ======================================================
-
 function logout() {
 
     localStorage.removeItem(
@@ -175,10 +157,6 @@ function logout() {
 
 }
 
-
-// ======================================================
-// VALIDAR SESIÓN
-// ======================================================
 
 async function requireAdminSession() {
 
@@ -251,21 +229,9 @@ async function requireAdminSession() {
 
         if (!response.ok) {
 
-            const refreshed =
-                await refreshSession();
+            logout();
 
-
-            if (!refreshed) {
-
-                logout();
-
-                return false;
-
-            }
-
-
-            session =
-                getStoredSession();
+            return false;
 
         }
 
@@ -291,7 +257,6 @@ async function requireAdminSession() {
     } catch (error) {
 
         console.error(
-            "Error validando sesión:",
             error
         );
 
@@ -306,7 +271,7 @@ async function requireAdminSession() {
 
 
 // ======================================================
-// HEADERS
+// API
 // ======================================================
 
 function headers(extra = {}) {
@@ -334,10 +299,6 @@ function headers(extra = {}) {
 
 }
 
-
-// ======================================================
-// API
-// ======================================================
 
 async function api(
     path,
@@ -405,14 +366,14 @@ async function api(
 
 
         console.error(
-            "Supabase error:",
+            "Supabase:",
             response.status,
             text
         );
 
 
         throw new Error(
-            `Error ${response.status}: ${text}`
+            text
         );
 
     }
@@ -422,16 +383,9 @@ async function api(
         await response.text();
 
 
-    if (!text) {
-
-        return null;
-
-    }
-
-
-    return JSON.parse(
-        text
-    );
+    return text
+        ? JSON.parse(text)
+        : null;
 
 }
 
@@ -451,30 +405,15 @@ function escapeHtml(value) {
 
     return String(value)
 
-        .replaceAll(
-            "&",
-            "&amp;"
-        )
+        .replaceAll("&","&amp;")
 
-        .replaceAll(
-            "<",
-            "&lt;"
-        )
+        .replaceAll("<","&lt;")
 
-        .replaceAll(
-            ">",
-            "&gt;"
-        )
+        .replaceAll(">","&gt;")
 
-        .replaceAll(
-            '"',
-            "&quot;"
-        )
+        .replaceAll('"',"&quot;")
 
-        .replaceAll(
-            "'",
-            "&#039;"
-        );
+        .replaceAll("'","&#039;");
 
 }
 
@@ -482,18 +421,12 @@ function escapeHtml(value) {
 function getStockClass(stock) {
 
     if (stock === 0) {
-
         return "stock-zero";
-
     }
-
 
     if (stock <= 5) {
-
         return "stock-low";
-
     }
-
 
     return "";
 
@@ -515,9 +448,7 @@ function categoryOption(
                     : ""
             }
         >
-
             ${category}
-
         </option>
 
     `;
@@ -526,18 +457,14 @@ function categoryOption(
 
 
 // ======================================================
-// CARGAR PRODUCTOS
+// PRODUCTOS
 // ======================================================
 
 async function loadProducts() {
 
     const products =
         await api(
-
-            "productos" +
-            "?select=*" +
-            "&order=id.asc"
-
+            "productos?select=*&order=id.asc"
         );
 
 
@@ -547,7 +474,11 @@ async function loadProducts() {
         );
 
 
-    const activeCount =
+    document
+    .getElementById(
+        "activeProducts"
+    )
+    .textContent =
         products.filter(
             product =>
                 product.activo
@@ -556,45 +487,20 @@ async function loadProducts() {
 
     document
     .getElementById(
-        "activeProducts"
+        "totalStock"
     )
     .textContent =
-        activeCount;
-
-
-    const totalStock =
         products.reduce(
 
-            (total, product) =>
-                total +
+            (sum, product) =>
+                sum +
                 Number(
-                    product.stock ||
-                    0
+                    product.stock || 0
                 ),
 
             0
 
         );
-
-
-    document
-    .getElementById(
-        "totalStock"
-    )
-    .textContent =
-        totalStock;
-
-
-    if (
-        products.length === 0
-    ) {
-
-        container.innerHTML =
-            "<p>No hay productos registrados.</p>";
-
-        return;
-
-    }
 
 
     container.innerHTML =
@@ -603,8 +509,7 @@ async function loadProducts() {
 
             const stock =
                 Number(
-                    product.stock ||
-                    0
+                    product.stock || 0
                 );
 
 
@@ -617,7 +522,6 @@ async function loadProducts() {
             return `
 
                 <div class="product-row">
-
 
                     <input
                         id="name-${product.id}"
@@ -655,8 +559,8 @@ async function loadProducts() {
                     <input
                         id="price-${product.id}"
                         type="number"
-                        min="0"
                         step="0.01"
+                        min="0"
                         value="${product.precio}"
                     >
 
@@ -689,7 +593,6 @@ async function loadProducts() {
 
 
                     <div class="actions">
-
 
                         <button
                             class="admin-btn secondary"
@@ -734,9 +637,7 @@ async function loadProducts() {
                             Eliminar
                         </button>
 
-
                     </div>
-
 
                 </div>
 
@@ -791,38 +692,15 @@ async function saveProduct(id) {
         );
 
 
-    if (!nombre) {
-
-        alert(
-            "El producto debe tener nombre."
-        );
-
-        return;
-
-    }
-
-
     if (
-        Number.isNaN(precio) ||
-        precio < 0
-    ) {
-
-        alert(
-            "El precio no es válido."
-        );
-
-        return;
-
-    }
-
-
-    if (
+        !nombre ||
+        precio < 0 ||
         !Number.isInteger(stock) ||
         stock < 0
     ) {
 
         alert(
-            "El stock debe ser un número entero igual o mayor a 0."
+            "Revisa los datos del producto."
         );
 
         return;
@@ -830,60 +708,39 @@ async function saveProduct(id) {
     }
 
 
-    try {
+    await api(
 
-        await api(
+        `productos?id=eq.${id}`,
 
-            `productos?id=eq.${id}`,
+        {
 
-            {
+            method: "PATCH",
 
-                method:
-                    "PATCH",
+            headers: {
+                Prefer: "return=minimal"
+            },
 
-                headers: {
+            body:
+                JSON.stringify({
 
-                    Prefer:
-                        "return=minimal"
+                    nombre,
+                    categoria,
+                    precio,
+                    stock
 
-                },
+                })
 
-                body:
-                    JSON.stringify({
+        }
 
-                        nombre,
-                        categoria,
-                        precio,
-                        stock
-
-                    })
-
-            }
-
-        );
+    );
 
 
-        alert(
-            "Producto actualizado correctamente."
-        );
+    alert(
+        "Producto actualizado."
+    );
 
 
-        await loadProducts();
-
-
-    } catch (error) {
-
-        console.error(
-            "Error actualizando producto:",
-            error
-        );
-
-
-        alert(
-            "No se pudo actualizar el producto."
-        );
-
-    }
+    await loadProducts();
 
 }
 
@@ -897,59 +754,38 @@ async function toggleProduct(
     currentStatus
 ) {
 
-    try {
+    await api(
 
-        await api(
+        `productos?id=eq.${id}`,
 
-            `productos?id=eq.${id}`,
+        {
 
-            {
+            method: "PATCH",
 
-                method:
-                    "PATCH",
+            headers: {
+                Prefer: "return=minimal"
+            },
 
-                headers: {
+            body:
+                JSON.stringify({
 
-                    Prefer:
-                        "return=minimal"
+                    activo:
+                        !currentStatus
 
-                },
+                })
 
-                body:
-                    JSON.stringify({
+        }
 
-                        activo:
-                            !currentStatus
-
-                    })
-
-            }
-
-        );
+    );
 
 
-        await loadProducts();
-
-
-    } catch (error) {
-
-        console.error(
-            "Error cambiando estado:",
-            error
-        );
-
-
-        alert(
-            "No se pudo cambiar el estado."
-        );
-
-    }
+    await loadProducts();
 
 }
 
 
 // ======================================================
-// ELIMINAR PRODUCTO
+// ELIMINAR
 // ======================================================
 
 async function deleteProduct(
@@ -965,18 +801,12 @@ async function deleteProduct(
 
     const confirmed =
         confirm(
-
-            `¿Eliminar "${nombre}"?\n\n` +
-
-            `Esta acción no se puede deshacer.`
-
+            `¿Eliminar "${nombre}"?`
         );
 
 
     if (!confirmed) {
-
         return;
-
     }
 
 
@@ -987,44 +817,19 @@ async function deleteProduct(
             `productos?id=eq.${id}`,
 
             {
-
-                method:
-                    "DELETE",
-
-                headers: {
-
-                    Prefer:
-                        "return=minimal"
-
-                }
-
+                method: "DELETE"
             }
 
-        );
-
-
-        alert(
-            "Producto eliminado."
         );
 
 
         await loadProducts();
 
 
-    } catch (error) {
-
-        console.error(
-            "Error eliminando producto:",
-            error
-        );
-
+    } catch {
 
         alert(
-
-            "No se pudo eliminar.\n\n" +
-
-            "Si tiene ventas asociadas, utiliza Desactivar."
-
+            "No se puede eliminar porque tiene ventas asociadas."
         );
 
     }
@@ -1091,38 +896,14 @@ async function addProduct() {
         .value === "true";
 
 
-    if (!nombre) {
-
-        alert(
-            "Ingresa el nombre."
-        );
-
-        return;
-
-    }
-
-
     if (
-        Number.isNaN(precio) ||
-        precio < 0
-    ) {
-
-        alert(
-            "Ingresa un precio válido."
-        );
-
-        return;
-
-    }
-
-
-    if (
-        !Number.isInteger(stock) ||
+        !nombre ||
+        precio < 0 ||
         stock < 0
     ) {
 
         alert(
-            "Ingresa un stock válido."
+            "Completa correctamente los datos."
         );
 
         return;
@@ -1130,105 +911,64 @@ async function addProduct() {
     }
 
 
-    try {
+    await api(
 
-        await api(
+        "productos",
 
-            "productos",
+        {
 
-            {
+            method: "POST",
 
-                method:
-                    "POST",
+            body:
+                JSON.stringify({
 
-                headers: {
+                    nombre,
+                    categoria,
+                    precio,
+                    stock,
+                    activo,
 
-                    Prefer:
-                        "return=minimal"
+                    es_prueba:
+                        sample
 
-                },
+                })
 
-                body:
-                    JSON.stringify({
+        }
 
-                        nombre,
-                        categoria,
-                        precio,
-                        stock,
-                        activo,
-
-                        es_prueba:
-                            sample
-
-                    })
-
-            }
-
-        );
+    );
 
 
-        document
-        .getElementById(
-            "newName"
-        )
-        .value = "";
+    document
+    .getElementById(
+        "newName"
+    )
+    .value =
+        "";
 
 
-        document
-        .getElementById(
-            "newPrice"
-        )
-        .value = "";
+    document
+    .getElementById(
+        "newPrice"
+    )
+    .value =
+        "";
 
 
-        document
-        .getElementById(
-            "newStock"
-        )
-        .value = "0";
+    document
+    .getElementById(
+        "newStock"
+    )
+    .value =
+        "0";
 
 
-        document
-        .getElementById(
-            "newSample"
-        )
-        .value = "false";
-
-
-        document
-        .getElementById(
-            "newActive"
-        )
-        .value = "true";
-
-
-        alert(
-            "Producto agregado correctamente."
-        );
-
-
-        await loadProducts();
-
-
-    } catch (error) {
-
-        console.error(
-            "Error agregando producto:",
-            error
-        );
-
-
-        alert(
-            "No se pudo agregar el producto."
-        );
-
-    }
+    await loadProducts();
 
 }
 
 
 // ======================================================
-// HISTORIAL GENERAL DE ÓRDENES
+// ÓRDENES
 // ======================================================
 
 async function loadOrders() {
@@ -1252,27 +992,23 @@ async function loadOrders() {
         orders.length;
 
 
-    const total =
-        orders.reduce(
-
-            (sum, order) =>
-                sum +
-                Number(
-                    order.total
-                ),
-
-            0
-
-        );
-
-
     document
     .getElementById(
         "totalSales"
     )
     .textContent =
         money(
-            total
+
+            orders.reduce(
+
+                (sum, order) =>
+                    sum +
+                    Number(order.total),
+
+                0
+
+            )
+
         );
 
 
@@ -1282,105 +1018,73 @@ async function loadOrders() {
         );
 
 
-    if (
-        orders.length === 0
-    ) {
-
-        body.innerHTML = `
+    body.innerHTML =
+        orders
+        .map(order => `
 
             <tr>
 
-                <td
-                    colspan="4"
-                    style="
-                        text-align:center;
-                        padding:24px;
-                        color:#777;
-                    "
-                >
+                <td>
 
-                    Todavía no hay órdenes.
+                    <strong>
+
+                        #${
+                            String(
+                                order.numero_orden
+                            )
+                            .padStart(
+                                3,
+                                "0"
+                            )
+                        }
+
+                    </strong>
+
+                </td>
+
+
+                <td>
+
+                    ${
+                        new Date(
+                            order.fecha
+                        )
+                        .toLocaleString(
+                            "es-EC"
+                        )
+                    }
+
+                </td>
+
+
+                <td>
+
+                    ${
+                        order.estado_pago ===
+                        "Pagado"
+
+                            ? (
+                                order.metodo_pago ||
+                                "Pagado"
+                            )
+
+                            : "Pendiente"
+                    }
+
+                </td>
+
+
+                <td>
+
+                    <strong>
+                        ${money(order.total)}
+                    </strong>
 
                 </td>
 
             </tr>
 
-        `;
-
-
-        return;
-
-    }
-
-
-    body.innerHTML =
-        orders
-        .map(order => {
-
-            const fecha =
-                new Date(
-                    order.fecha
-                )
-                .toLocaleString(
-                    "es-EC"
-                );
-
-
-            return `
-
-                <tr>
-
-                    <td>
-
-                        <strong>
-
-                            #${
-                                String(
-                                    order.numero_orden
-                                )
-                                .padStart(
-                                    3,
-                                    "0"
-                                )
-                            }
-
-                        </strong>
-
-                    </td>
-
-
-                    <td>
-                        ${fecha}
-                    </td>
-
-
-                    <td>
-
-                        ${
-                            order.metodo_pago ||
-                            "Pendiente"
-                        }
-
-                    </td>
-
-
-                    <td>
-
-                        <strong>
-
-                            ${money(
-                                order.total
-                            )}
-
-                        </strong>
-
-                    </td>
-
-                </tr>
-
-            `;
-
-        })
+        `)
         .join("");
 
 }
@@ -1388,7 +1092,6 @@ async function loadOrders() {
 
 // ======================================================
 // CAJA DEL DÍA
-// SE BASA EN FECHA DE PAGO
 // ======================================================
 
 async function loadDailyCash() {
@@ -1399,31 +1102,21 @@ async function loadDailyCash() {
 
     const start =
         new Date(
-
             now.getFullYear(),
             now.getMonth(),
-            now.getDate(),
-
-            0,
-            0,
-            0,
-            0
-
+            now.getDate()
         );
 
 
     const end =
         new Date(
-
             now.getFullYear(),
             now.getMonth(),
             now.getDate(),
-
             23,
             59,
             59,
             999
-
         );
 
 
@@ -1436,7 +1129,6 @@ async function loadDailyCash() {
 
             "id," +
             "numero_orden," +
-            "fecha," +
             "fecha_pago," +
             "total," +
             "metodo_pago," +
@@ -1444,8 +1136,11 @@ async function loadDailyCash() {
 
             "detalle_orden(" +
                 "cantidad," +
-                "producto_id," +
-                "productos(nombre)" +
+                "subtotal," +
+                "productos(" +
+                    "nombre," +
+                    "categoria" +
+                ")" +
             ")" +
 
             "&estado_pago=eq.Pagado" +
@@ -1456,94 +1151,62 @@ async function loadDailyCash() {
 
             `&fecha_pago=lte.${encodeURIComponent(
                 end.toISOString()
-            )}` +
-
-            "&order=fecha_pago.desc"
+            )}`
 
         );
 
 
-    const totalOrders =
-        orders.length;
-
-
     const totalSales =
         orders.reduce(
-
-            (sum, order) =>
+            (sum,o) =>
                 sum +
-                Number(
-                    order.total
-                ),
-
+                Number(o.total),
             0
-
         );
 
 
     const cash =
         orders
-
         .filter(
-            order =>
-                order.metodo_pago ===
+            o =>
+                o.metodo_pago ===
                 "Efectivo"
         )
-
         .reduce(
-
-            (sum, order) =>
+            (sum,o) =>
                 sum +
-                Number(
-                    order.total
-                ),
-
+                Number(o.total),
             0
-
         );
 
 
     const transfer =
         orders
-
         .filter(
-            order =>
-                order.metodo_pago ===
+            o =>
+                o.metodo_pago ===
                 "Transferencia"
         )
-
         .reduce(
-
-            (sum, order) =>
+            (sum,o) =>
                 sum +
-                Number(
-                    order.total
-                ),
-
+                Number(o.total),
             0
-
         );
 
 
     const card =
         orders
-
         .filter(
-            order =>
-                order.metodo_pago ===
+            o =>
+                o.metodo_pago ===
                 "Tarjeta"
         )
-
         .reduce(
-
-            (sum, order) =>
+            (sum,o) =>
                 sum +
-                Number(
-                    order.total
-                ),
-
+                Number(o.total),
             0
-
         );
 
 
@@ -1552,7 +1215,7 @@ async function loadDailyCash() {
         "todayOrders"
     )
     .textContent =
-        totalOrders;
+        orders.length;
 
 
     document
@@ -1560,9 +1223,7 @@ async function loadDailyCash() {
         "todayTotal"
     )
     .textContent =
-        money(
-            totalSales
-        );
+        money(totalSales);
 
 
     document
@@ -1570,9 +1231,7 @@ async function loadDailyCash() {
         "todayCash"
     )
     .textContent =
-        money(
-            cash
-        );
+        money(cash);
 
 
     document
@@ -1580,9 +1239,7 @@ async function loadDailyCash() {
         "todayTransfer"
     )
     .textContent =
-        money(
-            transfer
-        );
+        money(transfer);
 
 
     document
@@ -1590,9 +1247,7 @@ async function loadDailyCash() {
         "todayCard"
     )
     .textContent =
-        money(
-            card
-        );
+        money(card);
 
 
     renderTopProducts(
@@ -1603,7 +1258,6 @@ async function loadDailyCash() {
     return {
 
         orders,
-        totalOrders,
         totalSales,
         cash,
         transfer,
@@ -1615,7 +1269,7 @@ async function loadDailyCash() {
 
 
 // ======================================================
-// PRODUCTOS MÁS VENDIDOS
+// TOP PRODUCTOS DEL DÍA
 // ======================================================
 
 function renderTopProducts(
@@ -1642,14 +1296,11 @@ function renderTopProducts(
                         "Producto";
 
 
-                    if (!totals[name]) {
-
-                        totals[name] = 0;
-
-                    }
-
-
-                    totals[name] +=
+                    totals[name] =
+                        (
+                            totals[name] ||
+                            0
+                        ) +
                         Number(
                             detail.cantidad
                         );
@@ -1662,13 +1313,12 @@ function renderTopProducts(
 
 
     const ranking =
-        Object.entries(
-            totals
-        )
+        Object.entries(totals)
 
         .sort(
-            (a, b) =>
-                b[1] - a[1]
+            (a,b) =>
+                b[1] -
+                a[1]
         )
 
         .slice(
@@ -1683,59 +1333,47 @@ function renderTopProducts(
         );
 
 
-    if (
-        ranking.length === 0
-    ) {
-
-        container.innerHTML =
-            "<p>No hay ventas pagadas hoy.</p>";
-
-        return;
-
-    }
-
-
     container.innerHTML =
-        ranking
-        .map(
-            (
-                [name, qty],
-                index
-            ) => `
+        ranking.length
 
-                <div class="ranking-row">
+        ? ranking
+            .map(
+                ([name,qty],i) => `
 
-                    <div>
+                    <div class="ranking-row">
 
-                        <span class="ranking-number">
-                            ${index + 1}
-                        </span>
+                        <div>
 
-                        ${escapeHtml(name)}
+                            <span class="ranking-number">
+                                ${i + 1}
+                            </span>
+
+                            ${escapeHtml(name)}
+
+                        </div>
+
+                        <strong>
+                            ${qty} uds.
+                        </strong>
 
                     </div>
 
+                `
+            )
+            .join("")
 
-                    <strong>
-                        ${qty} uds.
-                    </strong>
-
-                </div>
-
-            `
-        )
-        .join("");
+        : "<p>No hay ventas pagadas hoy.</p>";
 
 }
 
 
 // ======================================================
-// OBTENER ÚLTIMO CIERRE
+// ÚLTIMO CIERRE
 // ======================================================
 
 async function getLastClosing() {
 
-    const closings =
+    const rows =
         await api(
 
             "cierres_caja" +
@@ -1746,29 +1384,23 @@ async function getLastClosing() {
         );
 
 
-    if (
-        !closings ||
-        closings.length === 0
-    ) {
-
-        return null;
-
-    }
-
-
-    return closings[0];
+    return (
+        rows &&
+        rows.length
+    )
+        ? rows[0]
+        : null;
 
 }
 
 
 // ======================================================
 // CAJA ABIERTA
-// USA FECHA DE PAGO
 // ======================================================
 
 async function loadOpenCash() {
 
-    const lastClosing =
+    const last =
         await getLastClosing();
 
 
@@ -1776,13 +1408,13 @@ async function loadOpenCash() {
 
 
     if (
-        lastClosing &&
-        lastClosing.periodo_hasta
+        last &&
+        last.periodo_hasta
     ) {
 
         startDate =
             new Date(
-                lastClosing.periodo_hasta
+                last.periodo_hasta
             );
 
     } else {
@@ -1793,16 +1425,9 @@ async function loadOpenCash() {
 
         startDate =
             new Date(
-
                 now.getFullYear(),
                 now.getMonth(),
-                now.getDate(),
-
-                0,
-                0,
-                0,
-                0
-
+                now.getDate()
             );
 
     }
@@ -1814,7 +1439,6 @@ async function loadOpenCash() {
             "ordenes" +
 
             "?select=" +
-
             "id," +
             "numero_orden," +
             "fecha_pago," +
@@ -1836,11 +1460,9 @@ async function loadOpenCash() {
     const total =
         orders.reduce(
 
-            (sum, order) =>
+            (sum,o) =>
                 sum +
-                Number(
-                    order.total
-                ),
+                Number(o.total),
 
             0
 
@@ -1852,9 +1474,7 @@ async function loadOpenCash() {
         "openCashTotal"
     )
     .textContent =
-        money(
-            total
-        );
+        money(total);
 
 
     const info =
@@ -1863,25 +1483,24 @@ async function loadOpenCash() {
         );
 
 
-    if (
-        lastClosing &&
-        lastClosing.periodo_hasta
-    ) {
+    info.innerHTML =
+        last
 
-        const fecha =
-            new Date(
-                lastClosing.periodo_hasta
-            )
-            .toLocaleString(
-                "es-EC"
-            );
-
-
-        info.innerHTML = `
+        ? `
 
             Último cierre:
             <strong>
-                ${fecha}
+
+                ${
+                    new Date(
+                        last.periodo_hasta ||
+                        last.fecha
+                    )
+                    .toLocaleString(
+                        "es-EC"
+                    )
+                }
+
             </strong>
 
             <br>
@@ -1891,32 +1510,27 @@ async function loadOpenCash() {
                 ${orders.length}
             </strong>
 
-        `;
+        `
 
-    } else {
+        : `
 
-        info.innerHTML = `
-
-            Todavía no existe un cierre de caja.
+            Todavía no existe un cierre.
 
             <br>
 
-            Cobros pendientes de cierre:
+            Cobros pendientes:
             <strong>
                 ${orders.length}
             </strong>
 
         `;
-
-    }
 
 
     return {
 
         orders,
         total,
-        startDate,
-        lastClosing
+        startDate
 
     };
 
@@ -1939,157 +1553,95 @@ async function closeCash() {
         true;
 
 
-    button.textContent =
-        "Revisando caja...";
-
-
     try {
 
-        const openCash =
+        const open =
             await loadOpenCash();
 
 
         if (
-            openCash.orders.length === 0
+            open.orders.length === 0
         ) {
 
             alert(
-
-                "No existen cobros nuevos desde el último cierre.\n\n" +
-
-                "No es necesario realizar otro cierre."
-
+                "No existen cobros nuevos."
             );
-
 
             return;
 
         }
 
 
-        const totalSales =
-            openCash.orders.reduce(
-
-                (sum, order) =>
-                    sum +
-                    Number(
-                        order.total
-                    ),
-
-                0
-
-            );
-
-
         const cash =
-            openCash.orders
-
+            open.orders
             .filter(
-                order =>
-                    order.metodo_pago ===
+                o =>
+                    o.metodo_pago ===
                     "Efectivo"
             )
-
             .reduce(
-
-                (sum, order) =>
-                    sum +
-                    Number(
-                        order.total
-                    ),
-
+                (s,o) =>
+                    s +
+                    Number(o.total),
                 0
-
             );
 
 
         const transfer =
-            openCash.orders
-
+            open.orders
             .filter(
-                order =>
-                    order.metodo_pago ===
+                o =>
+                    o.metodo_pago ===
                     "Transferencia"
             )
-
             .reduce(
-
-                (sum, order) =>
-                    sum +
-                    Number(
-                        order.total
-                    ),
-
+                (s,o) =>
+                    s +
+                    Number(o.total),
                 0
-
             );
 
 
         const card =
-            openCash.orders
-
+            open.orders
             .filter(
-                order =>
-                    order.metodo_pago ===
+                o =>
+                    o.metodo_pago ===
                     "Tarjeta"
             )
-
             .reduce(
-
-                (sum, order) =>
-                    sum +
-                    Number(
-                        order.total
-                    ),
-
+                (s,o) =>
+                    s +
+                    Number(o.total),
                 0
-
             );
-
-
-        const message =
-
-            `CIERRE DE CAJA\n\n` +
-
-            `Cobros: ${openCash.orders.length}\n\n` +
-
-            `Efectivo: ${money(cash)}\n` +
-
-            `Transferencia: ${money(transfer)}\n` +
-
-            `Tarjeta: ${money(card)}\n\n` +
-
-            `TOTAL: ${money(totalSales)}\n\n` +
-
-            `¿Confirmar cierre?`;
 
 
         const confirmed =
             confirm(
-                message
+
+                `CIERRE DE CAJA\n\n` +
+
+                `Cobros: ${open.orders.length}\n` +
+
+                `Efectivo: ${money(cash)}\n` +
+
+                `Transferencia: ${money(transfer)}\n` +
+
+                `Tarjeta: ${money(card)}\n\n` +
+
+                `TOTAL: ${money(open.total)}`
+
             );
 
 
         if (!confirmed) {
-
             return;
-
         }
-
-
-        button.textContent =
-            "Cerrando caja...";
 
 
         const session =
             getStoredSession();
-
-
-        const email =
-            session
-            ?.user
-            ?.email ||
-            null;
 
 
         const closingTime =
@@ -2105,18 +1657,11 @@ async function closeCash() {
                 method:
                     "POST",
 
-                headers: {
-
-                    Prefer:
-                        "return=minimal"
-
-                },
-
                 body:
                     JSON.stringify({
 
                         total_ventas:
-                            totalSales,
+                            open.total,
 
                         total_efectivo:
                             cash,
@@ -2128,13 +1673,16 @@ async function closeCash() {
                             card,
 
                         numero_ordenes:
-                            openCash.orders.length,
+                            open.orders.length,
 
                         usuario_email:
-                            email,
+                            session
+                            ?.user
+                            ?.email ||
+                            null,
 
                         periodo_desde:
-                            openCash
+                            open
                             .startDate
                             .toISOString(),
 
@@ -2163,34 +1711,15 @@ async function closeCash() {
 
             loadOpenCash(),
 
-            loadCashClosings(),
-
-            loadOrders()
+            loadCashClosings()
 
         ]);
-
-
-    } catch (error) {
-
-        console.error(
-            "Error realizando cierre:",
-            error
-        );
-
-
-        alert(
-            "No se pudo realizar el cierre de caja."
-        );
 
 
     } finally {
 
         button.disabled =
             false;
-
-
-        button.textContent =
-            "Cerrar caja";
 
     }
 
@@ -2203,7 +1732,7 @@ async function closeCash() {
 
 async function loadCashClosings() {
 
-    const closings =
+    const rows =
         await api(
 
             "cierres_caja" +
@@ -2220,149 +1749,680 @@ async function loadCashClosings() {
         );
 
 
-    if (
-        !closings ||
-        closings.length === 0
-    ) {
+    body.innerHTML =
+        rows.length
 
-        body.innerHTML = `
+        ? rows
+            .map(close => `
+
+                <tr>
+
+                    <td>
+                        ${
+                            new Date(
+                                close.fecha
+                            )
+                            .toLocaleString(
+                                "es-EC"
+                            )
+                        }
+                    </td>
+
+                    <td>
+
+                        ${
+                            close.periodo_desde
+
+                            ? new Date(
+                                close.periodo_desde
+                            )
+                            .toLocaleString(
+                                "es-EC"
+                            )
+
+                            : "-"
+                        }
+
+                    </td>
+
+                    <td>
+
+                        ${
+                            close.periodo_hasta
+
+                            ? new Date(
+                                close.periodo_hasta
+                            )
+                            .toLocaleString(
+                                "es-EC"
+                            )
+
+                            : "-"
+                        }
+
+                    </td>
+
+                    <td>
+                        ${close.numero_ordenes}
+                    </td>
+
+                    <td>
+                        ${money(close.total_efectivo)}
+                    </td>
+
+                    <td>
+                        ${money(close.total_transferencia)}
+                    </td>
+
+                    <td>
+                        ${money(close.total_tarjeta)}
+                    </td>
+
+                    <td>
+                        <strong>
+                            ${money(close.total_ventas)}
+                        </strong>
+                    </td>
+
+                    <td>
+                        ${
+                            close.usuario_email ||
+                            "-"
+                        }
+                    </td>
+
+                </tr>
+
+            `)
+            .join("")
+
+        : `
 
             <tr>
 
-                <td
-                    colspan="9"
-                    style="
-                        text-align:center;
-                        padding:24px;
-                        color:#777;
-                    "
-                >
-
-                    Todavía no hay cierres de caja.
-
+                <td colspan="9">
+                    Todavía no existen cierres.
                 </td>
 
             </tr>
 
         `;
 
+}
+
+
+// ======================================================
+// REPORTES
+// ======================================================
+
+function setDefaultReportDates() {
+
+    const now =
+        new Date();
+
+
+    const first =
+        new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            1
+        );
+
+
+    function localDateString(date) {
+
+        const year =
+            date.getFullYear();
+
+
+        const month =
+            String(
+                date.getMonth() + 1
+            )
+            .padStart(
+                2,
+                "0"
+            );
+
+
+        const day =
+            String(
+                date.getDate()
+            )
+            .padStart(
+                2,
+                "0"
+            );
+
+
+        return `${year}-${month}-${day}`;
+
+    }
+
+
+    document
+    .getElementById(
+        "reportFrom"
+    )
+    .value =
+        localDateString(first);
+
+
+    document
+    .getElementById(
+        "reportTo"
+    )
+    .value =
+        localDateString(now);
+
+}
+
+
+async function generateReport() {
+
+    const from =
+        document
+        .getElementById(
+            "reportFrom"
+        )
+        .value;
+
+
+    const to =
+        document
+        .getElementById(
+            "reportTo"
+        )
+        .value;
+
+
+    if (
+        !from ||
+        !to
+    ) {
+
+        alert(
+            "Selecciona las fechas."
+        );
 
         return;
 
     }
 
 
-    body.innerHTML =
-        closings
-        .map(close => {
+    const start =
+        new Date(
+            `${from}T00:00:00`
+        );
 
 
-            const closingDate =
-                new Date(
-                    close.fecha
-                )
-                .toLocaleString(
-                    "es-EC"
-                );
+    const end =
+        new Date(
+            `${to}T23:59:59.999`
+        );
 
 
-            const desde =
-                close.periodo_desde
-                    ? new Date(
-                        close.periodo_desde
-                    )
-                    .toLocaleString(
-                        "es-EC"
-                    )
-                    : "-";
+    if (
+        start >
+        end
+    ) {
+
+        alert(
+            "El rango de fechas no es válido."
+        );
+
+        return;
+
+    }
 
 
-            const hasta =
-                close.periodo_hasta
-                    ? new Date(
-                        close.periodo_hasta
-                    )
-                    .toLocaleString(
-                        "es-EC"
-                    )
-                    : "-";
+    try {
+
+        const paid =
+            await api(
+
+                "ordenes" +
+
+                "?select=" +
+
+                "id," +
+                "numero_orden," +
+                "total," +
+                "metodo_pago," +
+                "estado_pago," +
+                "fecha_pago," +
+
+                "detalle_orden(" +
+                    "cantidad," +
+                    "subtotal," +
+                    "productos(" +
+                        "nombre," +
+                        "categoria" +
+                    ")" +
+                ")" +
+
+                "&estado_pago=eq.Pagado" +
+
+                `&fecha_pago=gte.${encodeURIComponent(
+                    start.toISOString()
+                )}` +
+
+                `&fecha_pago=lte.${encodeURIComponent(
+                    end.toISOString()
+                )}`
+
+            );
 
 
-            return `
+        const pending =
+            await api(
 
-                <tr>
+                "ordenes" +
 
+                "?select=" +
+                "id," +
+                "total," +
+                "fecha," +
+                "estado_pago" +
 
-                    <td>
-                        ${closingDate}
-                    </td>
+                "&estado_pago=eq.Pendiente" +
 
+                `&fecha=gte.${encodeURIComponent(
+                    start.toISOString()
+                )}` +
 
-                    <td>
-                        ${desde}
-                    </td>
+                `&fecha=lte.${encodeURIComponent(
+                    end.toISOString()
+                )}`
 
-
-                    <td>
-                        ${hasta}
-                    </td>
-
-
-                    <td>
-                        ${close.numero_ordenes}
-                    </td>
-
-
-                    <td>
-                        ${money(
-                            close.total_efectivo
-                        )}
-                    </td>
+            );
 
 
-                    <td>
-                        ${money(
-                            close.total_transferencia
-                        )}
-                    </td>
+        const totalSales =
+            paid.reduce(
+                (s,o) =>
+                    s +
+                    Number(o.total),
+                0
+            );
 
 
-                    <td>
-                        ${money(
-                            close.total_tarjeta
-                        )}
-                    </td>
+        const pendingTotal =
+            pending.reduce(
+                (s,o) =>
+                    s +
+                    Number(o.total),
+                0
+            );
 
 
-                    <td>
-
-                        <strong>
-
-                            ${money(
-                                close.total_ventas
-                            )}
-
-                        </strong>
-
-                    </td>
-
-
-                    <td>
-
-                        ${
-                            close.usuario_email ||
-                            "-"
-                        }
-
-                    </td>
+        const cash =
+            paid
+            .filter(
+                o =>
+                    o.metodo_pago ===
+                    "Efectivo"
+            )
+            .reduce(
+                (s,o) =>
+                    s +
+                    Number(o.total),
+                0
+            );
 
 
-                </tr>
+        const transfer =
+            paid
+            .filter(
+                o =>
+                    o.metodo_pago ===
+                    "Transferencia"
+            )
+            .reduce(
+                (s,o) =>
+                    s +
+                    Number(o.total),
+                0
+            );
 
-            `;
 
-        })
-        .join("");
+        const card =
+            paid
+            .filter(
+                o =>
+                    o.metodo_pago ===
+                    "Tarjeta"
+            )
+            .reduce(
+                (s,o) =>
+                    s +
+                    Number(o.total),
+                0
+            );
+
+
+        document
+        .getElementById(
+            "reportSales"
+        )
+        .textContent =
+            money(totalSales);
+
+
+        document
+        .getElementById(
+            "reportOrders"
+        )
+        .textContent =
+            paid.length;
+
+
+        document
+        .getElementById(
+            "reportPending"
+        )
+        .textContent =
+            money(pendingTotal);
+
+
+        document
+        .getElementById(
+            "reportCash"
+        )
+        .textContent =
+            money(cash);
+
+
+        document
+        .getElementById(
+            "reportTransfer"
+        )
+        .textContent =
+            money(transfer);
+
+
+        document
+        .getElementById(
+            "reportCard"
+        )
+        .textContent =
+            money(card);
+
+
+        renderReportProducts(
+            paid
+        );
+
+
+        renderReportCategories(
+            paid
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Error en reporte:",
+            error
+        );
+
+
+        alert(
+            "No se pudo generar el reporte."
+        );
+
+    }
+
+}
+
+
+// ======================================================
+// PRODUCTOS DEL REPORTE
+// ======================================================
+
+function renderReportProducts(
+    orders
+) {
+
+    const totals = {};
+
+
+    orders.forEach(
+        order => {
+
+            (
+                order.detalle_orden ||
+                []
+            )
+            .forEach(
+                detail => {
+
+                    const name =
+                        detail
+                        .productos
+                        ?.nombre ||
+                        "Producto";
+
+
+                    if (!totals[name]) {
+
+                        totals[name] = {
+                            qty: 0,
+                            sales: 0
+                        };
+
+                    }
+
+
+                    totals[name].qty +=
+                        Number(
+                            detail.cantidad
+                        );
+
+
+                    totals[name].sales +=
+                        Number(
+                            detail.subtotal ||
+                            0
+                        );
+
+                }
+            );
+
+        }
+    );
+
+
+    const ranking =
+        Object.entries(
+            totals
+        )
+        .sort(
+            (a,b) =>
+                b[1].qty -
+                a[1].qty
+        );
+
+
+    const container =
+        document.getElementById(
+            "reportTopProducts"
+        );
+
+
+    container.innerHTML =
+        ranking.length
+
+        ? ranking
+            .map(
+                ([name,data],index) => `
+
+                    <div class="ranking-row">
+
+                        <div>
+
+                            <span class="ranking-number">
+                                ${index + 1}
+                            </span>
+
+                            ${escapeHtml(name)}
+
+                        </div>
+
+
+                        <div style="text-align:right">
+
+                            <strong>
+                                ${data.qty} uds.
+                            </strong>
+
+                            <div
+                                style="
+                                    color:#777;
+                                    font-size:.8rem;
+                                "
+                            >
+                                ${money(data.sales)}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                `
+            )
+            .join("")
+
+        : "<p>No hay ventas en este período.</p>";
+
+}
+
+
+// ======================================================
+// CATEGORÍAS DEL REPORTE
+// ======================================================
+
+function renderReportCategories(
+    orders
+) {
+
+    const categories = {};
+
+
+    orders.forEach(
+        order => {
+
+            (
+                order.detalle_orden ||
+                []
+            )
+            .forEach(
+                detail => {
+
+                    const category =
+                        detail
+                        .productos
+                        ?.categoria ||
+                        "Sin categoría";
+
+
+                    if (
+                        !categories[
+                            category
+                        ]
+                    ) {
+
+                        categories[
+                            category
+                        ] = {
+
+                            qty: 0,
+                            sales: 0
+
+                        };
+
+                    }
+
+
+                    categories[
+                        category
+                    ].qty +=
+
+                        Number(
+                            detail.cantidad
+                        );
+
+
+                    categories[
+                        category
+                    ].sales +=
+
+                        Number(
+                            detail.subtotal ||
+                            0
+                        );
+
+                }
+            );
+
+        }
+    );
+
+
+    const list =
+        Object.entries(
+            categories
+        )
+        .sort(
+            (a,b) =>
+                b[1].sales -
+                a[1].sales
+        );
+
+
+    const container =
+        document.getElementById(
+            "reportCategories"
+        );
+
+
+    container.innerHTML =
+        list.length
+
+        ? list
+            .map(
+                ([category,data]) => `
+
+                    <div class="ranking-row">
+
+                        <div>
+                            ${escapeHtml(category)}
+                        </div>
+
+                        <div style="text-align:right">
+
+                            <strong>
+                                ${money(data.sales)}
+                            </strong>
+
+                            <div
+                                style="
+                                    color:#777;
+                                    font-size:.8rem;
+                                "
+                            >
+                                ${data.qty} uds.
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                `
+            )
+            .join("")
+
+        : "<p>No hay ventas en este período.</p>";
 
 }
 
@@ -2401,8 +2461,18 @@ document
 );
 
 
+document
+.getElementById(
+    "generateReportBtn"
+)
+.addEventListener(
+    "click",
+    generateReport
+);
+
+
 // ======================================================
-// INICIALIZAR
+// INICIO
 // ======================================================
 
 async function initAdmin() {
@@ -2417,9 +2487,8 @@ async function initAdmin() {
     ) {
 
         alert(
-            "Configura SUPABASE_URL y SUPABASE_KEY en admin.js."
+            "Configura Supabase en admin.js."
         );
-
 
         return;
 
@@ -2435,6 +2504,9 @@ async function initAdmin() {
         return;
 
     }
+
+
+    setDefaultReportDates();
 
 
     try {
@@ -2454,21 +2526,24 @@ async function initAdmin() {
         ]);
 
 
+        await generateReport();
+
+
         console.log(
-            "DAKORI Admin iniciado correctamente."
+            "DAKORI Admin cargado correctamente."
         );
 
 
     } catch (error) {
 
         console.error(
-            "Error iniciando panel:",
+            "Error iniciando Admin:",
             error
         );
 
 
         alert(
-            "No se pudo cargar completamente el panel de administración."
+            "No se pudo cargar completamente el panel."
         );
 
     }
