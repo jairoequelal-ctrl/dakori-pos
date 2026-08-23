@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>DAKORI Cobros</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #fff8f2;
+            font-family: Arial, sans-serif;
+            color: #1d2733;
+        }
+
+        header {
+            background: #17304b;
+            color: white;
+            padding: 18px 24px;
+
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            margin: 0;
+        }
+
+        header p {
+            margin: 5px 0 0;
+            opacity: .8;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .header-actions a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 22px;
+        }
+
+        .summary-card {
+            background: #17304b;
+            color: white;
+            border-radius: 16px;
+            padding: 20px;
+        }
+
+        .summary-card span {
+            display: block;
+            opacity: .8;
+        }
+
+        .summary-card strong {
+            display: block;
+            margin-top: 7px;
+            font-size: 1.7rem;
+        }
+
+        .orders {
+            display: grid;
+            grid-template-columns:
+                repeat(auto-fit,minmax(280px,1fr));
+            gap: 18px;
+        }
+
+        .order-card {
+            background: white;
+            border: 1px solid #eadfd8;
+            border-radius: 18px;
+            padding: 18px;
+
+            box-shadow:
+                0 8px 22px
+                rgba(23,48,75,.08);
+        }
+
+        .order-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .order-number {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: #17304b;
+        }
+
+        .status {
+            background: #fff0d9;
+            color: #9a6200;
+            border-radius: 999px;
+            padding: 7px 10px;
+            font-size: .8rem;
+            font-weight: 900;
+        }
+
+        .items {
+            margin: 16px 0;
+        }
+
+        .item {
+            padding: 6px 0;
+            border-bottom: 1px dashed #ddd;
+        }
+
+        .order-state {
+            margin-top: 10px;
+            color: #555;
+        }
+
+        .total {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.2rem;
+            margin: 16px 0;
+        }
+
+        .payment-select {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .pay-btn {
+            width: 100%;
+            border: 0;
+            border-radius: 10px;
+            padding: 13px;
+            background: #c7363d;
+            color: white;
+            font-weight: 900;
+            cursor: pointer;
+        }
+
+        .pay-btn:disabled {
+            opacity: .45;
+            cursor: not-allowed;
+        }
+
+        .empty {
+            background: white;
+            border: 1px solid #eadfd8;
+            border-radius: 18px;
+            padding: 40px;
+            text-align: center;
+            color: #777;
+        }
+
+        @media(max-width:600px) {
+
+            .summary {
+                grid-template-columns: 1fr;
+            }
+
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<header>
+
+    <div>
+
+        <h1>
+            DAKORI · COBROS
+        </h1>
+
+        <p>
+            Pedidos pendientes de pago
+        </p>
+
+    </div>
+
+
+    <div class="header-actions">
+
+        <a href="index.html">
+            POS
+        </a>
+
+        <a href="cocina.html">
+            Cocina
+        </a>
+
+        <a href="admin.html">
+            Admin
+        </a>
+
+    </div>
+
+</header>
+
+
+<main class="container">
+
+
+    <section class="summary">
+
+        <div class="summary-card">
+
+            <span>
+                Pedidos pendientes
+            </span>
+
+            <strong id="pendingCount">
+                0
+            </strong>
+
+        </div>
+
+
+        <div class="summary-card">
+
+            <span>
+                Total pendiente
+            </span>
+
+            <strong id="pendingTotal">
+                $0.00
+            </strong>
+
+        </div>
+
+    </section>
+
+
+    <section
+        class="orders"
+        id="pendingOrders"
+    >
+        Cargando...
+    </section>
+
+
+</main>
+
+
+<script src="cobros.js"></script>
+
+
+</body>
+
+</html>

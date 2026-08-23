@@ -5,7 +5,7 @@
 
 
 // ======================================================
-// CONFIGURACIÓN
+// CONFIGURACIÓN SUPABASE
 // ======================================================
 
 const SUPABASE_URL =
@@ -37,6 +37,10 @@ function getStoredSession() {
 
 }
 
+
+// ======================================================
+// RENOVAR SESIÓN
+// ======================================================
 
 async function refreshSession() {
 
@@ -90,6 +94,10 @@ async function refreshSession() {
 
 
         if (!response.ok) {
+
+            console.error(
+                "No se pudo renovar la sesión."
+            );
 
             return false;
 
@@ -151,6 +159,10 @@ async function refreshSession() {
 }
 
 
+// ======================================================
+// CERRAR SESIÓN
+// ======================================================
+
 function logout() {
 
     localStorage.removeItem(
@@ -163,6 +175,10 @@ function logout() {
 
 }
 
+
+// ======================================================
+// VALIDAR SESIÓN
+// ======================================================
 
 async function requireAdminSession() {
 
@@ -290,7 +306,7 @@ async function requireAdminSession() {
 
 
 // ======================================================
-// API
+// HEADERS
 // ======================================================
 
 function headers(extra = {}) {
@@ -318,6 +334,10 @@ function headers(extra = {}) {
 
 }
 
+
+// ======================================================
+// API
+// ======================================================
 
 async function api(
     path,
@@ -431,15 +451,30 @@ function escapeHtml(value) {
 
     return String(value)
 
-        .replaceAll("&", "&amp;")
+        .replaceAll(
+            "&",
+            "&amp;"
+        )
 
-        .replaceAll("<", "&lt;")
+        .replaceAll(
+            "<",
+            "&lt;"
+        )
 
-        .replaceAll(">", "&gt;")
+        .replaceAll(
+            ">",
+            "&gt;"
+        )
 
-        .replaceAll('"', "&quot;")
+        .replaceAll(
+            '"',
+            "&quot;"
+        )
 
-        .replaceAll("'", "&#039;");
+        .replaceAll(
+            "'",
+            "&#039;"
+        );
 
 }
 
@@ -480,7 +515,9 @@ function categoryOption(
                     : ""
             }
         >
+
             ${category}
+
         </option>
 
     `;
@@ -489,7 +526,7 @@ function categoryOption(
 
 
 // ======================================================
-// PRODUCTOS
+// CARGAR PRODUCTOS
 // ======================================================
 
 async function loadProducts() {
@@ -771,7 +808,7 @@ async function saveProduct(id) {
     ) {
 
         alert(
-            "Precio inválido."
+            "El precio no es válido."
         );
 
         return;
@@ -785,7 +822,7 @@ async function saveProduct(id) {
     ) {
 
         alert(
-            "Stock inválido."
+            "El stock debe ser un número entero igual o mayor a 0."
         );
 
         return;
@@ -827,7 +864,7 @@ async function saveProduct(id) {
 
 
         alert(
-            "Producto actualizado."
+            "Producto actualizado correctamente."
         );
 
 
@@ -837,6 +874,7 @@ async function saveProduct(id) {
     } catch (error) {
 
         console.error(
+            "Error actualizando producto:",
             error
         );
 
@@ -896,6 +934,7 @@ async function toggleProduct(
     } catch (error) {
 
         console.error(
+            "Error cambiando estado:",
             error
         );
 
@@ -910,7 +949,7 @@ async function toggleProduct(
 
 
 // ======================================================
-// ELIMINAR
+// ELIMINAR PRODUCTO
 // ======================================================
 
 async function deleteProduct(
@@ -975,6 +1014,7 @@ async function deleteProduct(
     } catch (error) {
 
         console.error(
+            "Error eliminando producto:",
             error
         );
 
@@ -1163,7 +1203,7 @@ async function addProduct() {
 
 
         alert(
-            "Producto agregado."
+            "Producto agregado correctamente."
         );
 
 
@@ -1173,6 +1213,7 @@ async function addProduct() {
     } catch (error) {
 
         console.error(
+            "Error agregando producto:",
             error
         );
 
@@ -1187,7 +1228,7 @@ async function addProduct() {
 
 
 // ======================================================
-// HISTORIAL GENERAL
+// HISTORIAL GENERAL DE ÓRDENES
 // ======================================================
 
 async function loadOrders() {
@@ -1314,14 +1355,23 @@ async function loadOrders() {
 
 
                     <td>
-                        ${order.metodo_pago}
+
+                        ${
+                            order.metodo_pago ||
+                            "Pendiente"
+                        }
+
                     </td>
 
 
                     <td>
 
                         <strong>
-                            ${money(order.total)}
+
+                            ${money(
+                                order.total
+                            )}
+
                         </strong>
 
                     </td>
@@ -1338,6 +1388,7 @@ async function loadOrders() {
 
 // ======================================================
 // CAJA DEL DÍA
+// SE BASA EN FECHA DE PAGO
 // ======================================================
 
 async function loadDailyCash() {
@@ -1386,8 +1437,10 @@ async function loadDailyCash() {
             "id," +
             "numero_orden," +
             "fecha," +
+            "fecha_pago," +
             "total," +
             "metodo_pago," +
+            "estado_pago," +
 
             "detalle_orden(" +
                 "cantidad," +
@@ -1395,15 +1448,17 @@ async function loadDailyCash() {
                 "productos(nombre)" +
             ")" +
 
-            `&fecha=gte.${encodeURIComponent(
+            "&estado_pago=eq.Pagado" +
+
+            `&fecha_pago=gte.${encodeURIComponent(
                 start.toISOString()
             )}` +
 
-            `&fecha=lte.${encodeURIComponent(
+            `&fecha_pago=lte.${encodeURIComponent(
                 end.toISOString()
             )}` +
 
-            "&order=fecha.desc"
+            "&order=fecha_pago.desc"
 
         );
 
@@ -1633,7 +1688,7 @@ function renderTopProducts(
     ) {
 
         container.innerHTML =
-            "<p>No hay ventas registradas hoy.</p>";
+            "<p>No hay ventas pagadas hoy.</p>";
 
         return;
 
@@ -1675,7 +1730,7 @@ function renderTopProducts(
 
 
 // ======================================================
-// ÚLTIMO CIERRE
+// OBTENER ÚLTIMO CIERRE
 // ======================================================
 
 async function getLastClosing() {
@@ -1708,6 +1763,7 @@ async function getLastClosing() {
 
 // ======================================================
 // CAJA ABIERTA
+// USA FECHA DE PAGO
 // ======================================================
 
 async function loadOpenCash() {
@@ -1758,17 +1814,21 @@ async function loadOpenCash() {
             "ordenes" +
 
             "?select=" +
+
             "id," +
             "numero_orden," +
-            "fecha," +
+            "fecha_pago," +
             "total," +
-            "metodo_pago" +
+            "metodo_pago," +
+            "estado_pago" +
 
-            `&fecha=gt.${encodeURIComponent(
+            "&estado_pago=eq.Pagado" +
+
+            `&fecha_pago=gt.${encodeURIComponent(
                 startDate.toISOString()
             )}` +
 
-            "&order=fecha.asc"
+            "&order=fecha_pago.asc"
 
         );
 
@@ -1820,12 +1880,16 @@ async function loadOpenCash() {
         info.innerHTML = `
 
             Último cierre:
-            <strong>${fecha}</strong>
+            <strong>
+                ${fecha}
+            </strong>
 
             <br>
 
-            Ventas pendientes de cierre:
-            <strong>${orders.length}</strong>
+            Cobros pendientes de cierre:
+            <strong>
+                ${orders.length}
+            </strong>
 
         `;
 
@@ -1837,8 +1901,10 @@ async function loadOpenCash() {
 
             <br>
 
-            Ventas pendientes de cierre:
-            <strong>${orders.length}</strong>
+            Cobros pendientes de cierre:
+            <strong>
+                ${orders.length}
+            </strong>
 
         `;
 
@@ -1889,7 +1955,7 @@ async function closeCash() {
 
             alert(
 
-                "No existen ventas nuevas desde el último cierre.\n\n" +
+                "No existen cobros nuevos desde el último cierre.\n\n" +
 
                 "No es necesario realizar otro cierre."
 
@@ -1985,7 +2051,7 @@ async function closeCash() {
 
             `CIERRE DE CAJA\n\n` +
 
-            `Órdenes: ${openCash.orders.length}\n\n` +
+            `Cobros: ${openCash.orders.length}\n\n` +
 
             `Efectivo: ${money(cash)}\n` +
 
@@ -2336,7 +2402,7 @@ document
 
 
 // ======================================================
-// INICIO
+// INICIALIZAR
 // ======================================================
 
 async function initAdmin() {
