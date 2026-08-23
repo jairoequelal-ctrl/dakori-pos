@@ -1,38 +1,427 @@
-const SUPABASE_URL = "https://cveyhhgcljyxibqtgost.supabase.co";
-const SUPABASE_KEY = "sb_publishable_-8M32lNeLrCzFfLq319C8Q_bmZnBVB-";
+// =====================================================
+// DAKORI ADMIN
+// Login + productos + inventario + ventas
+// =====================================================
+
+
+// =====================================================
+// SUPABASE
+// =====================================================
+
+
+const SUPABASE_URL =
+    "https://cveyhhgcljyxibqtgost.supabase.co";
+
+
+const SUPABASE_KEY =
+    "sb_publishable_-8M32lNeLrCzFfLq319C8Q_bmZnBVB-";
+
+
+// =====================================================
+// SESIÓN
+// =====================================================
+
+
+function getStoredSession() {
+
+    try {
+
+        return JSON.parse(
+            localStorage.getItem(
+                "dakori_admin_session"
+            )
+        );
+
+    } catch {
+
+        return null;
+
+    }
+
+}
+
+
+// =====================================================
+// RENOVAR SESIÓN
+// =====================================================
+
+
+async function refreshSession() {
+
+    const session =
+        getStoredSession();
+
+
+    if (
+        !session ||
+        !session.refresh_token
+    ) {
+
+        return false;
+
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+
+                `${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`,
+
+                {
+
+                    method:
+                        "POST",
+
+                    headers: {
+
+                        apikey:
+                            SUPABASE_KEY,
+
+                        "Content-Type":
+                            "application/json"
+
+                    },
+
+                    body:
+                        JSON.stringify({
+
+                            refresh_token:
+                                session.refresh_token
+
+                        })
+
+                }
+
+            );
+
+
+        if (!response.ok) {
+
+            console.error(
+                "No se pudo renovar sesión"
+            );
+
+            return false;
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        const newSession = {
+
+            access_token:
+                data.access_token,
+
+            refresh_token:
+                data.refresh_token,
+
+            expires_at:
+                Date.now() +
+                (
+                    Number(
+                        data.expires_in
+                    ) * 1000
+                ),
+
+            user:
+                data.user
+
+        };
+
+
+        localStorage.setItem(
+
+            "dakori_admin_session",
+
+            JSON.stringify(
+                newSession
+            )
+
+        );
+
+
+        return true;
+
+
+    } catch (error) {
+
+        console.error(
+            "Error renovando sesión:",
+            error
+        );
+
+
+        return false;
+
+    }
+
+}
+
+
+// =====================================================
+// CERRAR SESIÓN
+// =====================================================
+
+
+function logout() {
+
+    localStorage.removeItem(
+        "dakori_admin_session"
+    );
+
+
+    window.location.href =
+        "login.html";
+
+}
+
+
+// =====================================================
+// VERIFICAR SESIÓN
+// =====================================================
+
+
+async function requireAdminSession() {
+
+    let session =
+        getStoredSession();
+
+
+    if (
+        !session ||
+        !session.access_token
+    ) {
+
+        window.location.href =
+            "login.html";
+
+        return false;
+
+    }
+
+
+    // Renovar si está próxima a vencer
+
+    if (
+        session.expires_at &&
+        Date.now() >
+        session.expires_at -
+        120000
+    ) {
+
+        const refreshed =
+            await refreshSession();
+
+
+        if (!refreshed) {
+
+            logout();
+
+            return false;
+
+        }
+
+
+        session =
+            getStoredSession();
+
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+
+                `${SUPABASE_URL}/auth/v1/user`,
+
+                {
+
+                    headers: {
+
+                        apikey:
+                            SUPABASE_KEY,
+
+                        Authorization:
+                            `Bearer ${session.access_token}`
+
+                    }
+
+                }
+
+            );
+
+
+        if (!response.ok) {
+
+            const refreshed =
+                await refreshSession();
+
+
+            if (!refreshed) {
+
+                logout();
+
+                return false;
+
+            }
+
+
+            session =
+                getStoredSession();
+
+        }
+
+
+        if (
+            session.user &&
+            session.user.email
+        ) {
+
+            document
+            .getElementById(
+                "adminUser"
+            )
+            .textContent =
+                session.user.email;
+
+        }
+
+
+        return true;
+
+
+    } catch (error) {
+
+        console.error(
+            "Error validando sesión:",
+            error
+        );
+
+
+        logout();
+
+        return false;
+
+    }
+
+}
+
+
+// =====================================================
+// HEADERS SUPABASE
+// =====================================================
 
 
 function headers(extra = {}) {
 
+    const session =
+        getStoredSession();
+
+
     return {
-        apikey: SUPABASE_KEY,
-        "Content-Type": "application/json",
+
+        apikey:
+            SUPABASE_KEY,
+
+        Authorization:
+            session
+                ? `Bearer ${session.access_token}`
+                : "",
+
+        "Content-Type":
+            "application/json",
+
         ...extra
+
     };
 
 }
 
 
-async function api(path, options = {}) {
+// =====================================================
+// API
+// =====================================================
 
-    const response = await fetch(
-        `${SUPABASE_URL}/rest/v1/${path}`,
-        {
-            ...options,
-            headers: headers(options.headers || {})
+
+async function api(
+    path,
+    options = {}
+) {
+
+    let response =
+        await fetch(
+
+            `${SUPABASE_URL}/rest/v1/${path}`,
+
+            {
+
+                ...options,
+
+                headers:
+                    headers(
+                        options.headers ||
+                        {}
+                    )
+
+            }
+
+        );
+
+
+    // Si expira token, intentamos una renovación
+
+    if (
+        response.status === 401
+    ) {
+
+        const refreshed =
+            await refreshSession();
+
+
+        if (refreshed) {
+
+            response =
+                await fetch(
+
+                    `${SUPABASE_URL}/rest/v1/${path}`,
+
+                    {
+
+                        ...options,
+
+                        headers:
+                            headers(
+                                options.headers ||
+                                {}
+                            )
+
+                    }
+
+                );
+
         }
-    );
+
+    }
 
 
     if (!response.ok) {
 
-        const text = await response.text();
+        const text =
+            await response.text();
+
 
         console.error(
             "Supabase error:",
             response.status,
             text
         );
+
 
         throw new Error(
             `Error ${response.status}: ${text}`
@@ -41,15 +430,27 @@ async function api(path, options = {}) {
     }
 
 
-    const text = await response.text();
+    const text =
+        await response.text();
+
 
     if (!text) {
+
         return null;
+
     }
 
-    return JSON.parse(text);
+
+    return JSON.parse(
+        text
+    );
 
 }
+
+
+// =====================================================
+// UTILIDADES
+// =====================================================
 
 
 function money(value) {
@@ -62,23 +463,38 @@ function money(value) {
 function getStockClass(stock) {
 
     if (stock === 0) {
+
         return "stock-zero";
+
     }
 
+
     if (stock <= 5) {
+
         return "stock-low";
+
     }
+
 
     return "";
 
 }
 
 
+// =====================================================
+// CARGAR PRODUCTOS
+// =====================================================
+
+
 async function loadProducts() {
 
     const products =
         await api(
-            "productos?select=*&order=id.asc"
+
+            "productos" +
+            "?select=*" +
+            "&order=id.asc"
+
         );
 
 
@@ -90,7 +506,8 @@ async function loadProducts() {
 
     const activeCount =
         products.filter(
-            product => product.activo
+            product =>
+                product.activo
         ).length;
 
 
@@ -102,10 +519,16 @@ async function loadProducts() {
 
     const totalStock =
         products.reduce(
+
             (total, product) =>
                 total +
-                Number(product.stock || 0),
+                Number(
+                    product.stock ||
+                    0
+                ),
+
             0
+
         );
 
 
@@ -115,7 +538,9 @@ async function loadProducts() {
         totalStock;
 
 
-    if (products.length === 0) {
+    if (
+        products.length === 0
+    ) {
 
         container.innerHTML =
             "<p>No hay productos registrados.</p>";
@@ -131,7 +556,20 @@ async function loadProducts() {
 
             const stock =
                 Number(
-                    product.stock || 0
+                    product.stock ||
+                    0
+                );
+
+
+            /*
+             * Usamos encodeURIComponent para
+             * pasar nombres de manera segura
+             * al botón Eliminar.
+             */
+
+            const encodedName =
+                encodeURIComponent(
+                    product.nombre
                 );
 
 
@@ -139,9 +577,10 @@ async function loadProducts() {
 
                 <div class="product-row">
 
+
                     <input
                         id="name-${product.id}"
-                        value="${product.nombre}"
+                        value="${escapeHtml(product.nombre)}"
                     >
 
 
@@ -149,52 +588,25 @@ async function loadProducts() {
                         id="category-${product.id}"
                     >
 
-                        <option
-                            value="Chicken"
-                            ${
-                                product.categoria === "Chicken"
-                                ? "selected"
-                                : ""
-                            }
-                        >
-                            Chicken
-                        </option>
+                        ${categoryOption(
+                            "Chicken",
+                            product.categoria
+                        )}
 
+                        ${categoryOption(
+                            "Ramen",
+                            product.categoria
+                        )}
 
-                        <option
-                            value="Ramen"
-                            ${
-                                product.categoria === "Ramen"
-                                ? "selected"
-                                : ""
-                            }
-                        >
-                            Ramen
-                        </option>
+                        ${categoryOption(
+                            "Bebidas",
+                            product.categoria
+                        )}
 
-
-                        <option
-                            value="Bebidas"
-                            ${
-                                product.categoria === "Bebidas"
-                                ? "selected"
-                                : ""
-                            }
-                        >
-                            Bebidas
-                        </option>
-
-
-                        <option
-                            value="Snacks"
-                            ${
-                                product.categoria === "Snacks"
-                                ? "selected"
-                                : ""
-                            }
-                        >
-                            Snacks
-                        </option>
+                        ${categoryOption(
+                            "Snacks",
+                            product.categoria
+                        )}
 
                     </select>
 
@@ -221,15 +633,15 @@ async function loadProducts() {
                     <span
                         class="${
                             product.activo
-                            ? "status-active"
-                            : "status-inactive"
+                                ? "status-active"
+                                : "status-inactive"
                         }"
                     >
 
                         ${
                             product.activo
-                            ? "Activo"
-                            : "Inactivo"
+                                ? "Activo"
+                                : "Inactivo"
                         }
 
                     </span>
@@ -237,9 +649,14 @@ async function loadProducts() {
 
                     <div class="actions">
 
+
                         <button
                             class="admin-btn secondary"
-                            onclick="saveProduct(${product.id})"
+                            onclick="
+                                saveProduct(
+                                    ${product.id}
+                                )
+                            "
                         >
                             Guardar
                         </button>
@@ -257,28 +674,28 @@ async function loadProducts() {
 
                             ${
                                 product.activo
-                                ? "Desactivar"
-                                : "Activar"
+                                    ? "Desactivar"
+                                    : "Activar"
                             }
 
                         </button>
 
 
                         <button
-                            class="admin-btn"
-                            style="
-                                background:#b33;
-                                color:white;
+                            class="admin-btn danger"
+                            onclick="
+                                deleteProduct(
+                                    ${product.id},
+                                    '${encodedName}'
+                                )
                             "
-                            onclick='deleteProduct(
-                                ${product.id},
-                                ${JSON.stringify(product.nombre)}
-                            )'
                         >
                             Eliminar
                         </button>
 
+
                     </div>
+
 
                 </div>
 
@@ -288,6 +705,78 @@ async function loadProducts() {
         .join("");
 
 }
+
+
+// =====================================================
+// ESCAPAR HTML
+// =====================================================
+
+
+function escapeHtml(value) {
+
+    return String(value)
+
+        .replaceAll(
+            "&",
+            "&amp;"
+        )
+
+        .replaceAll(
+            "<",
+            "&lt;"
+        )
+
+        .replaceAll(
+            ">",
+            "&gt;"
+        )
+
+        .replaceAll(
+            '"',
+            "&quot;"
+        )
+
+        .replaceAll(
+            "'",
+            "&#039;"
+        );
+
+}
+
+
+// =====================================================
+// OPCIONES DE CATEGORÍA
+// =====================================================
+
+
+function categoryOption(
+    category,
+    selected
+) {
+
+    return `
+
+        <option
+            value="${category}"
+            ${
+                category === selected
+                    ? "selected"
+                    : ""
+            }
+        >
+
+            ${category}
+
+        </option>
+
+    `;
+
+}
+
+
+// =====================================================
+// GUARDAR PRODUCTO
+// =====================================================
 
 
 async function saveProduct(id) {
@@ -371,7 +860,9 @@ async function saveProduct(id) {
     try {
 
         await api(
+
             `productos?id=eq.${id}`,
+
             {
 
                 method:
@@ -395,6 +886,7 @@ async function saveProduct(id) {
                     })
 
             }
+
         );
 
 
@@ -409,7 +901,6 @@ async function saveProduct(id) {
     } catch (error) {
 
         console.error(
-            "Error actualizando producto:",
             error
         );
 
@@ -423,6 +914,11 @@ async function saveProduct(id) {
 }
 
 
+// =====================================================
+// ACTIVAR / DESACTIVAR
+// =====================================================
+
+
 async function toggleProduct(
     id,
     currentStatus
@@ -431,7 +927,9 @@ async function toggleProduct(
     try {
 
         await api(
+
             `productos?id=eq.${id}`,
+
             {
 
                 method:
@@ -453,6 +951,7 @@ async function toggleProduct(
                     })
 
             }
+
         );
 
 
@@ -462,7 +961,6 @@ async function toggleProduct(
     } catch (error) {
 
         console.error(
-            "Error cambiando estado:",
             error
         );
 
@@ -476,26 +974,49 @@ async function toggleProduct(
 }
 
 
+// =====================================================
+// ELIMINAR PRODUCTO
+// =====================================================
+
+
 async function deleteProduct(
     id,
-    nombre
+    encodedName
 ) {
+
+    const nombre =
+        decodeURIComponent(
+            encodedName
+        );
+
 
     const confirmed =
         confirm(
-            `¿Seguro que deseas eliminar "${nombre}"?\n\nEsta acción no se puede deshacer.`
+
+            `¿Eliminar "${nombre}"?\n\n` +
+
+            `Esta acción no se puede deshacer.\n\n` +
+
+            `Si el producto ya forma parte de una venta, ` +
+
+            `el sistema puede impedir eliminarlo.`
+
         );
 
 
     if (!confirmed) {
+
         return;
+
     }
 
 
     try {
 
         await api(
+
             `productos?id=eq.${id}`,
+
             {
 
                 method:
@@ -509,6 +1030,7 @@ async function deleteProduct(
                 }
 
             }
+
         );
 
 
@@ -529,12 +1051,23 @@ async function deleteProduct(
 
 
         alert(
-            "No se pudo eliminar el producto. Puede tener ventas asociadas. En ese caso, desactívalo."
+
+            "No se pudo eliminar el producto.\n\n" +
+
+            "Probablemente tiene ventas asociadas. " +
+
+            "En ese caso utiliza Desactivar."
+
         );
 
     }
 
 }
+
+
+// =====================================================
+// AGREGAR PRODUCTO
+// =====================================================
 
 
 async function addProduct() {
@@ -623,7 +1156,7 @@ async function addProduct() {
     ) {
 
         alert(
-            "La cantidad debe ser un número entero igual o mayor a 0."
+            "El stock debe ser un número entero igual o mayor a 0."
         );
 
         return;
@@ -634,7 +1167,9 @@ async function addProduct() {
     try {
 
         await api(
+
             "productos",
+
             {
 
                 method:
@@ -655,38 +1190,58 @@ async function addProduct() {
                         precio,
                         stock,
                         activo,
+
                         es_prueba:
                             sample
 
                     })
 
             }
+
         );
 
 
-        document.getElementById(
+        // Limpiar formulario
+
+
+        document
+        .getElementById(
             "newName"
-        ).value = "";
+        )
+        .value =
+            "";
 
 
-        document.getElementById(
+        document
+        .getElementById(
             "newPrice"
-        ).value = "";
+        )
+        .value =
+            "";
 
 
-        document.getElementById(
+        document
+        .getElementById(
             "newStock"
-        ).value = "0";
+        )
+        .value =
+            "0";
 
 
-        document.getElementById(
+        document
+        .getElementById(
             "newSample"
-        ).value = "false";
+        )
+        .value =
+            "false";
 
 
-        document.getElementById(
+        document
+        .getElementById(
             "newActive"
-        ).value = "true";
+        )
+        .value =
+            "true";
 
 
         alert(
@@ -700,7 +1255,6 @@ async function addProduct() {
     } catch (error) {
 
         console.error(
-            "Error agregando producto:",
             error
         );
 
@@ -712,6 +1266,11 @@ async function addProduct() {
     }
 
 }
+
+
+// =====================================================
+// CARGAR ÓRDENES
+// =====================================================
 
 
 async function loadOrders() {
@@ -727,24 +1286,33 @@ async function loadOrders() {
         );
 
 
-    document.getElementById(
+    document
+    .getElementById(
         "totalOrders"
-    ).textContent =
+    )
+    .textContent =
         orders.length;
 
 
     const total =
         orders.reduce(
+
             (sum, order) =>
                 sum +
-                Number(order.total),
+                Number(
+                    order.total
+                ),
+
             0
+
         );
 
 
-    document.getElementById(
+    document
+    .getElementById(
         "totalSales"
-    ).textContent =
+    )
+    .textContent =
         money(total);
 
 
@@ -754,7 +1322,9 @@ async function loadOrders() {
         );
 
 
-    if (orders.length === 0) {
+    if (
+        orders.length === 0
+    ) {
 
         body.innerHTML = `
 
@@ -768,12 +1338,15 @@ async function loadOrders() {
                         color:#777;
                     "
                 >
+
                     Todavía no hay órdenes.
+
                 </td>
 
             </tr>
 
         `;
+
 
         return;
 
@@ -797,16 +1370,22 @@ async function loadOrders() {
 
                 <tr>
 
+
                     <td>
 
-                        #${
-                            String(
-                                order.numero_orden
-                            ).padStart(
-                                3,
-                                "0"
-                            )
-                        }
+                        <strong>
+
+                            #${
+                                String(
+                                    order.numero_orden
+                                )
+                                .padStart(
+                                    3,
+                                    "0"
+                                )
+                            }
+
+                        </strong>
 
                     </td>
 
@@ -825,15 +1404,14 @@ async function loadOrders() {
 
                         <strong>
 
-                            ${
-                                money(
-                                    order.total
-                                )
-                            }
+                            ${money(
+                                order.total
+                            )}
 
                         </strong>
 
                     </td>
+
 
                 </tr>
 
@@ -843,6 +1421,11 @@ async function loadOrders() {
         .join("");
 
 }
+
+
+// =====================================================
+// EVENTOS
+// =====================================================
 
 
 document
@@ -855,7 +1438,23 @@ document
 );
 
 
+document
+.getElementById(
+    "logoutBtn"
+)
+.addEventListener(
+    "click",
+    logout
+);
+
+
+// =====================================================
+// INICIAR PANEL
+// =====================================================
+
+
 async function initAdmin() {
+
 
     if (
         SUPABASE_URL.includes(
@@ -875,16 +1474,30 @@ async function initAdmin() {
     }
 
 
+    const authorized =
+        await requireAdminSession();
+
+
+    if (!authorized) {
+
+        return;
+
+    }
+
+
     try {
 
         await Promise.all([
+
             loadProducts(),
+
             loadOrders()
+
         ]);
 
 
         console.log(
-            "DAKORI Admin cargado correctamente."
+            "DAKORI Admin iniciado correctamente."
         );
 
 
