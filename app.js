@@ -1,10 +1,19 @@
+// ======================================================
+// DAKORI POS
+// Productos + carrito + órdenes + historial + stock
+// ======================================================
+
+
+// ------------------------------------------------------
+// 1. CONFIGURACIÓN SUPABASE
+// ------------------------------------------------------
 
 const SUPABASE_URL = "https://cveyhhgcljyxibqtgost.supabase.co";
 const SUPABASE_KEY = "sb_publishable_-8M32lNeLrCzFfLq319C8Q_bmZnBVB-";
 
 
 // ------------------------------------------------------
-// 2. VARIABLES PRINCIPALES
+// 2. ESTADO DE LA APP
 // ------------------------------------------------------
 
 let products = [];
@@ -39,7 +48,7 @@ const toast = document.getElementById("toast");
 
 
 // ------------------------------------------------------
-// 4. FUNCIONES GENERALES
+// 4. UTILIDADES
 // ------------------------------------------------------
 
 function money(value) {
@@ -47,14 +56,10 @@ function money(value) {
 }
 
 
-// ------------------------------------------------------
-// 5. CONEXIÓN CON SUPABASE
-// ------------------------------------------------------
-
 function apiHeaders(extraHeaders = {}) {
 
     return {
-        "apikey": SUPABASE_KEY,
+        apikey: SUPABASE_KEY,
         "Content-Type": "application/json",
         ...extraHeaders
     };
@@ -72,6 +77,7 @@ async function supabaseFetch(path, options = {}) {
         }
     );
 
+
     if (!response.ok) {
 
         const errorText = await response.text();
@@ -88,6 +94,7 @@ async function supabaseFetch(path, options = {}) {
 
     }
 
+
     const text = await response.text();
 
     if (!text) {
@@ -99,7 +106,7 @@ async function supabaseFetch(path, options = {}) {
 
 
 // ------------------------------------------------------
-// 6. CARGAR PRODUCTOS DESDE SUPABASE
+// 5. CARGAR PRODUCTOS
 // ------------------------------------------------------
 
 async function loadProducts() {
@@ -117,39 +124,34 @@ async function loadProducts() {
 
         const data = await supabaseFetch(
             "productos" +
-            "?select=id,nombre,categoria,precio,activo,es_prueba" +
+            "?select=id,nombre,categoria,precio,activo,es_prueba,stock" +
             "&activo=eq.true" +
             "&order=id.asc"
         );
 
-        products = (data || []).map(product => {
+        products = (data || []).map(product => ({
 
-            return {
+            id: Number(product.id),
 
-                id: Number(product.id),
+            name: product.nombre,
 
-                name: product.nombre,
+            category: product.categoria,
 
-                category: product.categoria,
+            price: Number(product.precio),
 
-                price: Number(product.precio),
+            sample: Boolean(product.es_prueba),
 
-                sample: Boolean(product.es_prueba)
+            stock: Number(product.stock ?? 0)
 
-            };
-
-        });
-
+        }));
 
         console.log(
-            "Productos cargados:",
+            "Productos cargados con stock:",
             products
         );
 
-
         renderCategories();
         renderProducts();
-
 
     } catch (error) {
 
@@ -164,32 +166,33 @@ async function loadProducts() {
                 style="grid-column:1/-1"
             >
                 No se pudieron cargar los productos.
-                Revisa la conexión con Supabase.
             </div>
         `;
 
         showToast(
             "Error al cargar productos"
         );
-
     }
-
 }
 
 
 // ------------------------------------------------------
-// 7. CATEGORÍAS
+// 6. CATEGORÍAS
 // ------------------------------------------------------
 
 function renderCategories() {
 
     const categories = [
+
         "Todos",
+
         ...new Set(
             products.map(
-                product => product.category
+                product =>
+                    product.category
             )
         )
+
     ];
 
 
@@ -199,7 +202,9 @@ function renderCategories() {
     categories.forEach(category => {
 
         const button =
-            document.createElement("button");
+            document.createElement(
+                "button"
+            );
 
 
         button.className =
@@ -238,32 +243,26 @@ function renderCategories() {
 
 
 // ------------------------------------------------------
-// 8. MOSTRAR PRODUCTOS
+// 7. MOSTRAR PRODUCTOS
 // ------------------------------------------------------
 
 function renderProducts() {
 
-    let filteredProducts;
+    const filteredProducts =
+        activeCategory === "Todos"
+
+        ? products
+
+        : products.filter(
+            product =>
+                product.category ===
+                activeCategory
+        );
 
 
-    if (activeCategory === "Todos") {
-
-        filteredProducts =
-            products;
-
-    } else {
-
-        filteredProducts =
-            products.filter(
-                product =>
-                    product.category ===
-                    activeCategory
-            );
-
-    }
-
-
-    if (filteredProducts.length === 0) {
+    if (
+        filteredProducts.length === 0
+    ) {
 
         productsGrid.innerHTML = `
             <div
@@ -281,49 +280,105 @@ function renderProducts() {
 
     productsGrid.innerHTML =
         filteredProducts
-        .map(product => `
+        .map(product => {
 
-            <article class="product-card">
+            const stockText =
+                product.stock === 0
+                ? "Agotado"
+                : `Stock: ${product.stock}`;
 
-                <div class="product-category">
-                    ${product.category}
-                </div>
 
-                <h3>
-                    ${product.name}
-                </h3>
+            return `
 
-                <div class="price">
-                    ${money(product.price)}
-                </div>
+                <article class="product-card">
 
-                <div class="sample">
+                    <div class="product-category">
+                        ${product.category}
+                    </div>
+
+
+                    <h3>
+                        ${product.name}
+                    </h3>
+
+
+                    <div class="price">
+                        ${money(product.price)}
+                    </div>
+
+
+                    <div class="sample">
+
+                        ${
+                            product.sample
+                                ? "Producto de prueba"
+                                : ""
+                        }
+
+                    </div>
+
+
+                    <div
+                        style="
+                            margin:8px 0 12px;
+                            font-weight:700;
+                            color:${
+                                product.stock === 0
+                                    ? "#b33"
+                                    : "#17304b"
+                            };
+                        "
+                    >
+                        ${stockText}
+                    </div>
+
 
                     ${
-                        product.sample
-                        ? "Producto de prueba"
-                        : "&nbsp;"
+                        product.stock > 0
+
+                        ? `
+
+                            <button
+                                class="add-btn"
+                                onclick="
+                                    addToCart(
+                                        ${product.id}
+                                    )
+                                "
+                            >
+                                Agregar
+                            </button>
+
+                          `
+
+                        : `
+
+                            <button
+                                class="add-btn"
+                                disabled
+                                style="
+                                    opacity:.4;
+                                    cursor:not-allowed;
+                                "
+                            >
+                                AGOTADO
+                            </button>
+
+                          `
                     }
 
-                </div>
+                </article>
 
-                <button
-                    class="add-btn"
-                    onclick="addToCart(${product.id})"
-                >
-                    Agregar
-                </button>
+            `;
 
-            </article>
-
-        `)
+        })
         .join("");
 
 }
 
 
 // ------------------------------------------------------
-// 9. AGREGAR PRODUCTOS AL PEDIDO
+// 8. AGREGAR AL CARRITO
 // ------------------------------------------------------
 
 function addToCart(productId) {
@@ -331,7 +386,8 @@ function addToCart(productId) {
     const product =
         products.find(
             product =>
-                product.id === productId
+                product.id ===
+                productId
         );
 
 
@@ -340,11 +396,43 @@ function addToCart(productId) {
     }
 
 
+    if (product.stock <= 0) {
+
+        showToast(
+            "Producto agotado"
+        );
+
+        return;
+
+    }
+
+
     const existingItem =
         cart.find(
             item =>
-                item.id === productId
+                item.id ===
+                productId
         );
+
+
+    const currentQty =
+        existingItem
+            ? existingItem.qty
+            : 0;
+
+
+    if (
+        currentQty >=
+        product.stock
+    ) {
+
+        showToast(
+            `Solo quedan ${product.stock} unidades`
+        );
+
+        return;
+
+    }
 
 
     if (existingItem) {
@@ -354,8 +442,11 @@ function addToCart(productId) {
     } else {
 
         cart.push({
+
             ...product,
+
             qty: 1
+
         });
 
     }
@@ -367,20 +458,38 @@ function addToCart(productId) {
 
 
 // ------------------------------------------------------
-// 10. CAMBIAR CANTIDAD
+// 9. CAMBIAR CANTIDAD
 // ------------------------------------------------------
 
-function changeQty(productId, amount) {
+function changeQty(
+    productId,
+    amount
+) {
 
     const item =
         cart.find(
             item =>
-                item.id === productId
+                item.id ===
+                productId
         );
 
 
     if (!item) {
         return;
+    }
+
+
+    if (
+        amount > 0 &&
+        item.qty >= item.stock
+    ) {
+
+        showToast(
+            `Solo quedan ${item.stock} unidades`
+        );
+
+        return;
+
     }
 
 
@@ -392,7 +501,8 @@ function changeQty(productId, amount) {
         cart =
             cart.filter(
                 item =>
-                    item.id !== productId
+                    item.id !==
+                    productId
             );
 
     }
@@ -404,15 +514,18 @@ function changeQty(productId, amount) {
 
 
 // ------------------------------------------------------
-// 11. ELIMINAR PRODUCTO
+// 10. ELIMINAR DEL CARRITO
 // ------------------------------------------------------
 
-function removeFromCart(productId) {
+function removeFromCart(
+    productId
+) {
 
     cart =
         cart.filter(
             item =>
-                item.id !== productId
+                item.id !==
+                productId
         );
 
 
@@ -422,19 +535,19 @@ function removeFromCart(productId) {
 
 
 // ------------------------------------------------------
-// 12. MOSTRAR CARRITO
+// 11. MOSTRAR CARRITO
 // ------------------------------------------------------
 
 function renderCart() {
 
-    if (cart.length === 0) {
+    if (
+        cart.length === 0
+    ) {
 
         cartItems.innerHTML = `
 
             <div class="empty-cart">
-
                 Tu pedido está vacío.
-
             </div>
 
         `;
@@ -455,9 +568,7 @@ function renderCart() {
                     <div class="cart-item-top">
 
                         <div class="cart-item-name">
-
                             ${item.name}
-
                         </div>
 
 
@@ -525,6 +636,18 @@ function renderCart() {
 
                     </div>
 
+
+                    <div
+                        style="
+                            margin-top:8px;
+                            font-size:.8rem;
+                            color:#777;
+                        "
+                    >
+                        Disponible:
+                        ${item.stock}
+                    </div>
+
                 </div>
 
             `)
@@ -534,7 +657,8 @@ function renderCart() {
         const units =
             cart.reduce(
                 (total, item) =>
-                    total + item.qty,
+                    total +
+                    item.qty,
                 0
             );
 
@@ -574,7 +698,7 @@ function renderCart() {
 
 
 // ------------------------------------------------------
-// 13. CALCULAR SIGUIENTE NÚMERO DE ORDEN
+// 12. NÚMERO DE ORDEN
 // ------------------------------------------------------
 
 async function loadNextOrderNumber() {
@@ -599,7 +723,8 @@ async function loadNextOrderNumber() {
 
             nextOrderNumber =
                 Number(
-                    rows[0].numero_orden
+                    rows[0]
+                    .numero_orden
                 ) + 1;
 
         } else {
@@ -629,10 +754,6 @@ async function loadNextOrderNumber() {
 }
 
 
-// ------------------------------------------------------
-// 14. MOSTRAR NÚMERO DE ORDEN
-// ------------------------------------------------------
-
 function refreshOrderNumber() {
 
     orderNumber.textContent =
@@ -649,6 +770,144 @@ function refreshOrderNumber() {
 
 
 // ------------------------------------------------------
+// 13. VALIDAR STOCK ANTES DE VENDER
+// ------------------------------------------------------
+
+async function validateStock() {
+
+    const ids =
+        cart.map(
+            item =>
+                item.id
+        );
+
+
+    if (
+        ids.length === 0
+    ) {
+        return true;
+    }
+
+
+    const idsFilter =
+        ids.join(",");
+
+
+    const currentProducts =
+        await supabaseFetch(
+
+            `productos?select=id,nombre,stock&id=in.(${idsFilter})`
+
+        );
+
+
+    for (
+        const item of cart
+    ) {
+
+        const current =
+            currentProducts.find(
+                product =>
+                    Number(product.id) ===
+                    item.id
+            );
+
+
+        if (!current) {
+
+            throw new Error(
+                `Producto no encontrado: ${item.name}`
+            );
+
+        }
+
+
+        if (
+            Number(current.stock) <
+            item.qty
+        ) {
+
+            throw new Error(
+                `Stock insuficiente para ${item.name}. Disponible: ${current.stock}`
+            );
+
+        }
+
+    }
+
+
+    return true;
+
+}
+
+
+// ------------------------------------------------------
+// 14. DESCONTAR STOCK
+// ------------------------------------------------------
+
+async function discountStock(
+    productId,
+    quantity
+) {
+
+    const response =
+        await fetch(
+
+            `${SUPABASE_URL}/rest/v1/rpc/descontar_stock`,
+
+            {
+
+                method:
+                    "POST",
+
+                headers: {
+
+                    apikey:
+                        SUPABASE_KEY,
+
+                    "Content-Type":
+                        "application/json"
+
+                },
+
+                body:
+                    JSON.stringify({
+
+                        p_producto_id:
+                            productId,
+
+                        p_cantidad:
+                            quantity
+
+                    })
+
+            }
+
+        );
+
+
+    if (!response.ok) {
+
+        const errorText =
+            await response.text();
+
+
+        console.error(
+            "Error descontando stock:",
+            errorText
+        );
+
+
+        throw new Error(
+            errorText
+        );
+
+    }
+
+}
+
+
+// ------------------------------------------------------
 // 15. FINALIZAR ORDEN
 // ------------------------------------------------------
 
@@ -660,154 +919,131 @@ async function finalizeOrder() {
 
 
     finishOrderBtn.disabled = true;
-
     finishOrderBtn.textContent =
-        "Guardando...";
-
-
-    const total =
-        cart.reduce(
-            (sum, item) =>
-                sum +
-                item.price *
-                item.qty,
-            0
-        );
+        "Procesando...";
 
 
     try {
 
-        // --------------------------------------------
-        // Crear orden principal
-        // --------------------------------------------
+        const detalles =
+            cart.map(item => ({
 
-        const createdOrders =
-            await supabaseFetch(
-                "ordenes",
+                producto_id:
+                    item.id,
+
+                cantidad:
+                    item.qty
+
+            }));
+
+
+        const response =
+            await fetch(
+
+                `${SUPABASE_URL}/rest/v1/rpc/crear_orden`,
+
                 {
 
-                    method: "POST",
+                    method:
+                        "POST",
 
                     headers: {
 
-                        "Prefer":
-                            "return=representation"
+                        apikey:
+                            SUPABASE_KEY,
+
+                        "Content-Type":
+                            "application/json"
 
                     },
 
                     body:
                         JSON.stringify({
 
-                            numero_orden:
-                                nextOrderNumber,
-
-                            total:
-                                total,
-
-                            metodo_pago:
+                            p_metodo_pago:
                                 paymentMethod.value,
 
-                            estado:
-                                "Finalizada"
+                            p_detalles:
+                                detalles
 
                         })
 
                 }
+
             );
 
 
-        console.log(
-            "Orden creada:",
-            createdOrders
-        );
+        const responseText =
+            await response.text();
 
 
-        if (
-            !createdOrders ||
-            createdOrders.length === 0
-        ) {
+        if (!response.ok) {
 
-            throw new Error(
-                "Supabase no devolvió la orden creada."
+            console.error(
+                "Error creando orden:",
+                responseText
             );
 
-        }
+
+            let mensaje =
+                "No se pudo finalizar la orden";
 
 
-        const createdOrder =
-            createdOrders[0];
+            try {
+
+                const error =
+                    JSON.parse(
+                        responseText
+                    );
 
 
-        if (!createdOrder.id) {
+                if (error.message) {
+                    mensaje =
+                        error.message;
+                }
 
-            throw new Error(
-                "No se obtuvo el ID de la orden."
-            );
-
-        }
-
-
-        // --------------------------------------------
-        // Crear detalle de orden
-        // --------------------------------------------
-
-        const details =
-            cart.map(item => ({
-
-                orden_id:
-                    createdOrder.id,
-
-                producto_id:
-                    item.id,
-
-                cantidad:
-                    item.qty,
-
-                precio_unitario:
-                    item.price,
-
-                subtotal:
-                    item.price *
-                    item.qty
-
-            }));
-
-
-        await supabaseFetch(
-            "detalle_orden",
-            {
-
-                method:
-                    "POST",
-
-                headers: {
-
-                    "Prefer":
-                        "return=minimal"
-
-                },
-
-                body:
-                    JSON.stringify(
-                        details
-                    )
-
+            } catch {
+                // Mantener mensaje general
             }
-        );
+
+
+            showToast(
+                mensaje
+            );
+
+
+            await loadProducts();
+
+            return;
+
+        }
+
+
+        const result =
+            JSON.parse(
+                responseText
+            );
 
 
         console.log(
-            "Detalle guardado:",
-            details
+            "Orden registrada:",
+            result
         );
 
 
-        const completedNumber =
-            nextOrderNumber;
+        const numero =
+            result.numero_orden;
+
+
+        const total =
+            Number(
+                result.total
+            );
 
 
         // Limpiar carrito
         cart = [];
+
 
         renderCart();
 
@@ -816,7 +1052,7 @@ async function finalizeOrder() {
 
             `Orden #${
                 String(
-                    completedNumber
+                    numero
                 ).padStart(
                     3,
                     "0"
@@ -826,7 +1062,9 @@ async function finalizeOrder() {
         );
 
 
-        // Actualizar número e historial
+        // Actualizar productos, stock e historial
+        await loadProducts();
+
         await loadNextOrderNumber();
 
         await renderHistory();
@@ -835,14 +1073,17 @@ async function finalizeOrder() {
     } catch (error) {
 
         console.error(
-            "Error guardando orden:",
+            "Error inesperado:",
             error
         );
 
 
         showToast(
-            "No se pudo guardar la orden"
+            "No se pudo finalizar la orden"
         );
+
+
+        await loadProducts();
 
     } finally {
 
@@ -859,7 +1100,7 @@ async function finalizeOrder() {
 
 
 // ------------------------------------------------------
-// 16. CARGAR HISTORIAL DE SUPABASE
+// 16. HISTORIAL
 // ------------------------------------------------------
 
 async function renderHistory() {
@@ -876,9 +1117,7 @@ async function renderHistory() {
                     padding:24px;
                 "
             >
-
                 Cargando historial...
-
             </td>
 
         </tr>
@@ -907,15 +1146,10 @@ async function renderHistory() {
                 ")" +
 
                 "&order=fecha.desc" +
+
                 "&limit=50"
 
             );
-
-
-        console.log(
-            "Historial:",
-            rows
-        );
 
 
         if (
@@ -935,9 +1169,7 @@ async function renderHistory() {
                             padding:24px;
                         "
                     >
-
                         Todavía no hay órdenes finalizadas.
-
                     </td>
 
                 </tr>
@@ -982,7 +1214,8 @@ async function renderHistory() {
                     .map(detail => {
 
                         const name =
-                            detail.productos
+                            detail
+                            .productos
                             ?.nombre ||
                             "Producto";
 
@@ -1018,26 +1251,20 @@ async function renderHistory() {
 
 
                         <td>
-
                             ${time}
-
                         </td>
 
 
                         <td>
-
                             ${
                                 itemText ||
                                 "Sin detalle"
                             }
-
                         </td>
 
 
                         <td>
-
                             ${order.metodo_pago}
-
                         </td>
 
 
@@ -1083,9 +1310,7 @@ async function renderHistory() {
                         padding:24px;
                     "
                 >
-
                     No se pudo cargar el historial.
-
                 </td>
 
             </tr>
@@ -1120,7 +1345,7 @@ function showToast(message) {
             );
 
         },
-        2600
+        3000
     );
 
 }
@@ -1149,11 +1374,8 @@ finishOrderBtn.addEventListener(
 
 
 // ------------------------------------------------------
-// 19. HISTORIAL
+// 19. HISTORIAL ONLINE
 // ------------------------------------------------------
-
-// Por ahora no permitimos borrar ventas desde la web.
-// Más adelante haremos un panel administrativo.
 
 clearHistoryBtn.disabled = true;
 
@@ -1165,17 +1387,10 @@ clearHistoryBtn.title =
 
 
 // ------------------------------------------------------
-// 20. INICIAR SISTEMA
+// 20. INICIAR APP
 // ------------------------------------------------------
 
 async function init() {
-
-    console.log(
-        "Iniciando DAKORI POS..."
-    );
-
-
-    // Revisar configuración
 
     if (
         SUPABASE_URL.includes(
@@ -1187,7 +1402,7 @@ async function init() {
     ) {
 
         alert(
-            "Debes configurar SUPABASE_URL y SUPABASE_KEY en app.js."
+            "Configura SUPABASE_URL y SUPABASE_KEY en app.js."
         );
 
         return;
@@ -1208,7 +1423,7 @@ async function init() {
 
 
         console.log(
-            "DAKORI POS conectado correctamente."
+            "DAKORI POS iniciado correctamente."
         );
 
 
@@ -1223,9 +1438,5 @@ async function init() {
 
 }
 
-
-// ------------------------------------------------------
-// INICIAR
-// ------------------------------------------------------
 
 init();
