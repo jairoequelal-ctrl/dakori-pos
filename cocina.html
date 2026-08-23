@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>DAKORI Cocina</title>
+
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+
+            margin: 0;
+
+            background: #f7f2ec;
+
+            font-family:
+                Arial,
+                sans-serif;
+
+            color: #1d2733;
+
+        }
+
+        header {
+
+            background: #17304b;
+
+            color: white;
+
+            padding: 18px 24px;
+
+            display: flex;
+
+            justify-content:
+                space-between;
+
+            align-items:
+                center;
+
+        }
+
+        header h1 {
+
+            margin: 0;
+
+        }
+
+        header p {
+
+            margin:
+                5px 0 0;
+
+            opacity: .8;
+
+        }
+
+        .header-actions {
+
+            display: flex;
+
+            gap: 14px;
+
+        }
+
+        .header-actions a {
+
+            color: white;
+
+            text-decoration: none;
+
+            font-weight: bold;
+
+        }
+
+        .board {
+
+            display: grid;
+
+            grid-template-columns:
+                1fr 1fr;
+
+            gap: 22px;
+
+            max-width: 1600px;
+
+            margin: 0 auto;
+
+            padding: 24px;
+
+        }
+
+        .column {
+
+            background: white;
+
+            border-radius: 18px;
+
+            padding: 18px;
+
+            min-height: 550px;
+
+            box-shadow:
+                0 8px 24px
+                rgba(0,0,0,.07);
+
+        }
+
+        .column-title {
+
+            display: flex;
+
+            justify-content:
+                space-between;
+
+            align-items:
+                center;
+
+            border-bottom:
+                2px solid #eee;
+
+            padding-bottom:
+                12px;
+
+            margin-bottom:
+                16px;
+
+        }
+
+        .column-title h2 {
+
+            margin: 0;
+
+            color: #17304b;
+
+        }
+
+        .counter {
+
+            background: #ef7fa5;
+
+            color: #17304b;
+
+            border-radius: 999px;
+
+            padding: 7px 12px;
+
+            font-weight: bold;
+
+        }
+
+        .order-card {
+
+            border:
+                1px solid #e6ddd5;
+
+            border-radius: 16px;
+
+            padding: 16px;
+
+            margin-bottom: 15px;
+
+            background: #fff;
+
+        }
+
+        .order-card.warning {
+
+            border:
+                2px solid #e0a12e;
+
+        }
+
+        .order-card.late {
+
+            border:
+                2px solid #c7363d;
+
+            background:
+                #fff5f5;
+
+        }
+
+        .order-top {
+
+            display: flex;
+
+            justify-content:
+                space-between;
+
+            gap: 12px;
+
+        }
+
+        .order-number {
+
+            font-size: 1.5rem;
+
+            font-weight: 900;
+
+            color: #17304b;
+
+        }
+
+        .time {
+
+            font-weight: 700;
+
+            color: #666;
+
+        }
+
+        .items {
+
+            margin:
+                16px 0;
+
+        }
+
+        .item {
+
+            padding:
+                7px 0;
+
+            border-bottom:
+                1px dashed #ddd;
+
+            font-size:
+                1.05rem;
+
+        }
+
+        .payment {
+
+            display:
+                inline-block;
+
+            padding:
+                7px 10px;
+
+            border-radius:
+                8px;
+
+            font-size:
+                .8rem;
+
+            font-weight:
+                900;
+
+            margin-bottom:
+                12px;
+
+        }
+
+        .paid {
+
+            background:
+                #dff3e8;
+
+            color:
+                #1f7a4f;
+
+        }
+
+        .unpaid {
+
+            background:
+                #fff0d9;
+
+            color:
+                #a46700;
+
+        }
+
+        .action-btn {
+
+            width: 100%;
+
+            border: 0;
+
+            padding: 13px;
+
+            border-radius: 10px;
+
+            font-weight: 900;
+
+            cursor: pointer;
+
+        }
+
+        .prepare {
+
+            background:
+                #17304b;
+
+            color: white;
+
+        }
+
+        .deliver {
+
+            background:
+                #c7363d;
+
+            color: white;
+
+        }
+
+        .empty {
+
+            text-align: center;
+
+            color: #888;
+
+            padding: 50px 20px;
+
+        }
+
+        @media(max-width:850px) {
+
+            .board {
+
+                grid-template-columns:
+                    1fr;
+
+                padding:
+                    14px;
+
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<header>
+
+
+    <div>
+
+        <h1>
+            DAKORI · COCINA
+        </h1>
+
+        <p>
+            Control de pedidos
+        </p>
+
+    </div>
+
+
+    <div class="header-actions">
+
+        <a href="index.html">
+            POS
+        </a>
+
+        <a href="admin.html">
+            Admin
+        </a>
+
+    </div>
+
+
+</header>
+
+
+<main class="board">
+
+
+    <section class="column">
+
+
+        <div class="column-title">
+
+            <h2>
+                🔔 Pendientes
+            </h2>
+
+            <span
+                class="counter"
+                id="pendingCounter"
+            >
+                0
+            </span>
+
+        </div>
+
+
+        <div id="pendingOrders">
+
+            Cargando...
+
+        </div>
+
+
+    </section>
+
+
+    <section class="column">
+
+
+        <div class="column-title">
+
+            <h2>
+                🍳 En proceso
+            </h2>
+
+            <span
+                class="counter"
+                id="processCounter"
+            >
+                0
+            </span>
+
+        </div>
+
+
+        <div id="processOrders">
+
+            Cargando...
+
+        </div>
+
+
+    </section>
+
+
+</main>
+
+
+<script src="cocina.js"></script>
+
+
+</body>
+
+</html>

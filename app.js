@@ -1,184 +1,366 @@
 // ======================================================
 // DAKORI POS
-// Productos + carrito + órdenes + historial + stock
+// Pedidos + inventario + pago + cocina
 // ======================================================
 
 
-// ------------------------------------------------------
-// 1. CONFIGURACIÓN SUPABASE
-// ------------------------------------------------------
+// ======================================================
+// SUPABASE
+// ======================================================
 
-const SUPABASE_URL = "https://cveyhhgcljyxibqtgost.supabase.co";
-const SUPABASE_KEY = "sb_publishable_-8M32lNeLrCzFfLq319C8Q_bmZnBVB-";
+const SUPABASE_URL =
+    "https://cveyhhgcljyxibqtgost.supabase.co";
+
+const SUPABASE_KEY =
+    "sb_publishable_-8M32lNeLrCzFfLq319C8Q_bmZnBVB-";
 
 
-// ------------------------------------------------------
-// 2. ESTADO DE LA APP
-// ------------------------------------------------------
+// ======================================================
+// ESTADO
+// ======================================================
 
 let products = [];
-let activeCategory = "Todos";
+
+let activeCategory =
+    "Todos";
+
 let cart = [];
-let nextOrderNumber = 1;
+
+let nextOrderNumber =
+    1;
 
 
-// ------------------------------------------------------
-// 3. ELEMENTOS DEL HTML
-// ------------------------------------------------------
+// ======================================================
+// ELEMENTOS
+// ======================================================
 
-const categoryTabs = document.getElementById("categoryTabs");
-const productsGrid = document.getElementById("productsGrid");
-
-const cartItems = document.getElementById("cartItems");
-const subtotalEl = document.getElementById("subtotal");
-const totalEl = document.getElementById("total");
-const cartStatus = document.getElementById("cartStatus");
-
-const finishOrderBtn = document.getElementById("finishOrderBtn");
-const clearCartBtn = document.getElementById("clearCartBtn");
-
-const paymentMethod = document.getElementById("paymentMethod");
-
-const orderNumber = document.getElementById("orderNumber");
-
-const historyBody = document.getElementById("historyBody");
-const clearHistoryBtn = document.getElementById("clearHistoryBtn");
-
-const toast = document.getElementById("toast");
+const categoryTabs =
+    document.getElementById(
+        "categoryTabs"
+    );
 
 
-// ------------------------------------------------------
-// 4. UTILIDADES
-// ------------------------------------------------------
+const productsGrid =
+    document.getElementById(
+        "productsGrid"
+    );
+
+
+const cartItems =
+    document.getElementById(
+        "cartItems"
+    );
+
+
+const subtotalEl =
+    document.getElementById(
+        "subtotal"
+    );
+
+
+const totalEl =
+    document.getElementById(
+        "total"
+    );
+
+
+const cartStatus =
+    document.getElementById(
+        "cartStatus"
+    );
+
+
+const finishOrderBtn =
+    document.getElementById(
+        "finishOrderBtn"
+    );
+
+
+const clearCartBtn =
+    document.getElementById(
+        "clearCartBtn"
+    );
+
+
+const paymentMoment =
+    document.getElementById(
+        "paymentMoment"
+    );
+
+
+const paymentMethod =
+    document.getElementById(
+        "paymentMethod"
+    );
+
+
+const paymentMethodContainer =
+    document.getElementById(
+        "paymentMethodContainer"
+    );
+
+
+const orderNumber =
+    document.getElementById(
+        "orderNumber"
+    );
+
+
+const historyBody =
+    document.getElementById(
+        "historyBody"
+    );
+
+
+const clearHistoryBtn =
+    document.getElementById(
+        "clearHistoryBtn"
+    );
+
+
+const toast =
+    document.getElementById(
+        "toast"
+    );
+
+
+// ======================================================
+// UTILIDADES
+// ======================================================
 
 function money(value) {
-    return `$${Number(value).toFixed(2)}`;
+
+    return `$${Number(value || 0).toFixed(2)}`;
+
 }
 
 
-function apiHeaders(extraHeaders = {}) {
+function apiHeaders(
+    extra = {}
+) {
 
     return {
-        apikey: SUPABASE_KEY,
-        "Content-Type": "application/json",
-        ...extraHeaders
+
+        apikey:
+            SUPABASE_KEY,
+
+        "Content-Type":
+            "application/json",
+
+        ...extra
+
     };
 
 }
 
 
-async function supabaseFetch(path, options = {}) {
+async function supabaseFetch(
+    path,
+    options = {}
+) {
 
-    const response = await fetch(
-        `${SUPABASE_URL}/rest/v1/${path}`,
-        {
-            ...options,
-            headers: apiHeaders(options.headers || {})
-        }
-    );
+    const response =
+        await fetch(
+
+            `${SUPABASE_URL}/rest/v1/${path}`,
+
+            {
+
+                ...options,
+
+                headers:
+                    apiHeaders(
+                        options.headers ||
+                        {}
+                    )
+
+            }
+
+        );
 
 
     if (!response.ok) {
 
-        const errorText = await response.text();
+        const errorText =
+            await response.text();
+
 
         console.error(
-            "Error Supabase:",
+            "Supabase:",
             response.status,
             errorText
         );
 
+
         throw new Error(
-            `Error ${response.status}: ${errorText}`
+            errorText
         );
 
     }
 
 
-    const text = await response.text();
+    const text =
+        await response.text();
 
-    if (!text) {
-        return null;
-    }
 
-    return JSON.parse(text);
+    return text
+        ? JSON.parse(text)
+        : null;
+
 }
 
 
-// ------------------------------------------------------
-// 5. CARGAR PRODUCTOS
-// ------------------------------------------------------
+// ======================================================
+// INTERFAZ DE PAGO
+// ======================================================
+
+function updatePaymentUI() {
+
+    if (
+        paymentMoment.value ===
+        "Después"
+    ) {
+
+        paymentMethodContainer
+        .style
+        .display =
+            "none";
+
+    } else {
+
+        paymentMethodContainer
+        .style
+        .display =
+            "block";
+
+    }
+
+}
+
+
+paymentMoment
+.addEventListener(
+    "change",
+    updatePaymentUI
+);
+
+
+updatePaymentUI();
+
+
+// ======================================================
+// PRODUCTOS
+// ======================================================
 
 async function loadProducts() {
 
     productsGrid.innerHTML = `
+
         <div
             class="empty-cart"
             style="grid-column:1/-1"
         >
+
             Cargando productos...
+
         </div>
+
     `;
+
 
     try {
 
-        const data = await supabaseFetch(
-            "productos" +
-            "?select=id,nombre,categoria,precio,activo,es_prueba,stock" +
-            "&activo=eq.true" +
-            "&order=id.asc"
-        );
+        const data =
+            await supabaseFetch(
 
-        products = (data || []).map(product => ({
+                "productos" +
 
-            id: Number(product.id),
+                "?select=" +
 
-            name: product.nombre,
+                "id," +
+                "nombre," +
+                "categoria," +
+                "precio," +
+                "activo," +
+                "es_prueba," +
+                "stock" +
 
-            category: product.categoria,
+                "&activo=eq.true" +
 
-            price: Number(product.precio),
+                "&order=id.asc"
 
-            sample: Boolean(product.es_prueba),
+            );
 
-            stock: Number(product.stock ?? 0)
 
-        }));
+        products =
+            (data || [])
+            .map(
+                product => ({
 
-        console.log(
-            "Productos cargados con stock:",
-            products
-        );
+                    id:
+                        Number(
+                            product.id
+                        ),
+
+                    name:
+                        product.nombre,
+
+                    category:
+                        product.categoria,
+
+                    price:
+                        Number(
+                            product.precio
+                        ),
+
+                    sample:
+                        Boolean(
+                            product.es_prueba
+                        ),
+
+                    stock:
+                        Number(
+                            product.stock ??
+                            0
+                        )
+
+                })
+            );
+
 
         renderCategories();
+
         renderProducts();
+
 
     } catch (error) {
 
         console.error(
-            "Error cargando productos:",
             error
         );
 
+
         productsGrid.innerHTML = `
+
             <div
                 class="empty-cart"
                 style="grid-column:1/-1"
             >
+
                 No se pudieron cargar los productos.
+
             </div>
+
         `;
 
-        showToast(
-            "Error al cargar productos"
-        );
     }
+
 }
 
 
-// ------------------------------------------------------
-// 6. CATEGORÍAS
-// ------------------------------------------------------
+// ======================================================
+// CATEGORÍAS
+// ======================================================
 
 function renderCategories() {
 
@@ -187,68 +369,76 @@ function renderCategories() {
         "Todos",
 
         ...new Set(
+
             products.map(
                 product =>
                     product.category
             )
+
         )
 
     ];
 
 
-    categoryTabs.innerHTML = "";
+    categoryTabs.innerHTML =
+        "";
 
 
-    categories.forEach(category => {
+    categories.forEach(
+        category => {
 
-        const button =
-            document.createElement(
-                "button"
+            const button =
+                document.createElement(
+                    "button"
+                );
+
+
+            button.className =
+                `category-btn ${
+                    activeCategory === category
+                        ? "active"
+                        : ""
+                }`;
+
+
+            button.textContent =
+                category;
+
+
+            button.addEventListener(
+                "click",
+                () => {
+
+                    activeCategory =
+                        category;
+
+
+                    renderCategories();
+
+                    renderProducts();
+
+                }
             );
 
 
-        button.className =
-            `category-btn ${
-                activeCategory === category
-                    ? "active"
-                    : ""
-            }`;
+            categoryTabs
+            .appendChild(
+                button
+            );
 
-
-        button.textContent =
-            category;
-
-
-        button.addEventListener(
-            "click",
-            () => {
-
-                activeCategory =
-                    category;
-
-                renderCategories();
-                renderProducts();
-
-            }
-        );
-
-
-        categoryTabs.appendChild(
-            button
-        );
-
-    });
+        }
+    );
 
 }
 
 
-// ------------------------------------------------------
-// 7. MOSTRAR PRODUCTOS
-// ------------------------------------------------------
+// ======================================================
+// RENDER PRODUCTOS
+// ======================================================
 
 function renderProducts() {
 
-    const filteredProducts =
+    const filtered =
         activeCategory === "Todos"
 
         ? products
@@ -260,50 +450,32 @@ function renderProducts() {
         );
 
 
-    if (
-        filteredProducts.length === 0
-    ) {
-
-        productsGrid.innerHTML = `
-            <div
-                class="empty-cart"
-                style="grid-column:1/-1"
-            >
-                No hay productos disponibles.
-            </div>
-        `;
-
-        return;
-
-    }
-
-
     productsGrid.innerHTML =
-        filteredProducts
-        .map(product => {
-
-            const stockText =
-                product.stock === 0
-                ? "Agotado"
-                : `Stock: ${product.stock}`;
-
-
-            return `
+        filtered
+        .map(
+            product => `
 
                 <article class="product-card">
 
+
                     <div class="product-category">
+
                         ${product.category}
+
                     </div>
 
 
                     <h3>
+
                         ${product.name}
+
                     </h3>
 
 
                     <div class="price">
+
                         ${money(product.price)}
+
                     </div>
 
 
@@ -329,59 +501,65 @@ function renderProducts() {
                             };
                         "
                     >
-                        ${stockText}
+
+                        ${
+                            product.stock === 0
+
+                                ? "AGOTADO"
+
+                                : `Stock: ${product.stock}`
+                        }
+
                     </div>
 
 
                     ${
                         product.stock > 0
 
-                        ? `
+                            ? `
 
-                            <button
-                                class="add-btn"
-                                onclick="
-                                    addToCart(
-                                        ${product.id}
-                                    )
-                                "
-                            >
-                                Agregar
-                            </button>
+                                <button
+                                    class="add-btn"
+                                    onclick="
+                                        addToCart(
+                                            ${product.id}
+                                        )
+                                    "
+                                >
+                                    Agregar
+                                </button>
 
-                          `
+                              `
 
-                        : `
+                            : `
 
-                            <button
-                                class="add-btn"
-                                disabled
-                                style="
-                                    opacity:.4;
-                                    cursor:not-allowed;
-                                "
-                            >
-                                AGOTADO
-                            </button>
+                                <button
+                                    class="add-btn"
+                                    disabled
+                                >
+                                    AGOTADO
+                                </button>
 
-                          `
+                              `
                     }
+
 
                 </article>
 
-            `;
-
-        })
+            `
+        )
         .join("");
 
 }
 
 
-// ------------------------------------------------------
-// 8. AGREGAR AL CARRITO
-// ------------------------------------------------------
+// ======================================================
+// CARRITO
+// ======================================================
 
-function addToCart(productId) {
+function addToCart(
+    productId
+) {
 
     const product =
         products.find(
@@ -396,18 +574,7 @@ function addToCart(productId) {
     }
 
 
-    if (product.stock <= 0) {
-
-        showToast(
-            "Producto agotado"
-        );
-
-        return;
-
-    }
-
-
-    const existingItem =
+    const existing =
         cart.find(
             item =>
                 item.id ===
@@ -416,8 +583,8 @@ function addToCart(productId) {
 
 
     const currentQty =
-        existingItem
-            ? existingItem.qty
+        existing
+            ? existing.qty
             : 0;
 
 
@@ -435,9 +602,9 @@ function addToCart(productId) {
     }
 
 
-    if (existingItem) {
+    if (existing) {
 
-        existingItem.qty += 1;
+        existing.qty += 1;
 
     } else {
 
@@ -456,10 +623,6 @@ function addToCart(productId) {
 
 }
 
-
-// ------------------------------------------------------
-// 9. CAMBIAR CANTIDAD
-// ------------------------------------------------------
 
 function changeQty(
     productId,
@@ -481,7 +644,8 @@ function changeQty(
 
     if (
         amount > 0 &&
-        item.qty >= item.stock
+        item.qty >=
+        item.stock
     ) {
 
         showToast(
@@ -493,10 +657,13 @@ function changeQty(
     }
 
 
-    item.qty += amount;
+    item.qty +=
+        amount;
 
 
-    if (item.qty <= 0) {
+    if (
+        item.qty <= 0
+    ) {
 
         cart =
             cart.filter(
@@ -512,10 +679,6 @@ function changeQty(
 
 }
 
-
-// ------------------------------------------------------
-// 10. ELIMINAR DEL CARRITO
-// ------------------------------------------------------
 
 function removeFromCart(
     productId
@@ -534,9 +697,9 @@ function removeFromCart(
 }
 
 
-// ------------------------------------------------------
-// 11. MOSTRAR CARRITO
-// ------------------------------------------------------
+// ======================================================
+// RENDER CARRITO
+// ======================================================
 
 function renderCart() {
 
@@ -547,7 +710,9 @@ function renderCart() {
         cartItems.innerHTML = `
 
             <div class="empty-cart">
+
                 Tu pedido está vacío.
+
             </div>
 
         `;
@@ -556,110 +721,114 @@ function renderCart() {
         cartStatus.textContent =
             "Agrega productos para comenzar";
 
-
     } else {
 
         cartItems.innerHTML =
             cart
-            .map(item => `
+            .map(
+                item => `
 
-                <div class="cart-item">
+                    <div class="cart-item">
 
-                    <div class="cart-item-top">
 
-                        <div class="cart-item-name">
-                            ${item.name}
+                        <div class="cart-item-top">
+
+
+                            <div class="cart-item-name">
+
+                                ${item.name}
+
+                            </div>
+
+
+                            <div class="cart-item-price">
+
+                                ${
+                                    money(
+                                        item.price *
+                                        item.qty
+                                    )
+                                }
+
+                            </div>
+
+
                         </div>
 
 
-                        <div class="cart-item-price">
-
-                            ${
-                                money(
-                                    item.price *
-                                    item.qty
-                                )
-                            }
-
-                        </div>
-
-                    </div>
+                        <div class="qty-row">
 
 
-                    <div class="qty-row">
+                            <div class="qty-controls">
 
-                        <div class="qty-controls">
+
+                                <button
+                                    class="qty-btn"
+                                    onclick="
+                                        changeQty(
+                                            ${item.id},
+                                            -1
+                                        )
+                                    "
+                                >
+                                    −
+                                </button>
+
+
+                                <strong>
+
+                                    ${item.qty}
+
+                                </strong>
+
+
+                                <button
+                                    class="qty-btn"
+                                    onclick="
+                                        changeQty(
+                                            ${item.id},
+                                            1
+                                        )
+                                    "
+                                >
+                                    +
+                                </button>
+
+
+                            </div>
+
 
                             <button
-                                class="qty-btn"
+                                class="remove-btn"
                                 onclick="
-                                    changeQty(
-                                        ${item.id},
-                                        -1
+                                    removeFromCart(
+                                        ${item.id}
                                     )
                                 "
                             >
-                                −
+                                Eliminar
                             </button>
 
-
-                            <strong>
-                                ${item.qty}
-                            </strong>
-
-
-                            <button
-                                class="qty-btn"
-                                onclick="
-                                    changeQty(
-                                        ${item.id},
-                                        1
-                                    )
-                                "
-                            >
-                                +
-                            </button>
 
                         </div>
 
 
-                        <button
-                            class="remove-btn"
-                            onclick="
-                                removeFromCart(
-                                    ${item.id}
-                                )
-                            "
-                        >
-                            Eliminar
-                        </button>
-
                     </div>
 
-
-                    <div
-                        style="
-                            margin-top:8px;
-                            font-size:.8rem;
-                            color:#777;
-                        "
-                    >
-                        Disponible:
-                        ${item.stock}
-                    </div>
-
-                </div>
-
-            `)
+                `
+            )
             .join("");
 
 
         const units =
             cart.reduce(
+
                 (total, item) =>
                     total +
                     item.qty,
+
                 0
+
             );
 
 
@@ -673,22 +842,25 @@ function renderCart() {
     }
 
 
-    const subtotal =
+    const total =
         cart.reduce(
-            (total, item) =>
-                total +
+
+            (sum, item) =>
+                sum +
                 item.price *
                 item.qty,
+
             0
+
         );
 
 
     subtotalEl.textContent =
-        money(subtotal);
+        money(total);
 
 
     totalEl.textContent =
-        money(subtotal);
+        money(total);
 
 
     finishOrderBtn.disabled =
@@ -697,9 +869,9 @@ function renderCart() {
 }
 
 
-// ------------------------------------------------------
-// 12. NÚMERO DE ORDEN
-// ------------------------------------------------------
+// ======================================================
+// SIGUIENTE ORDEN
+// ======================================================
 
 async function loadNextOrderNumber() {
 
@@ -716,22 +888,16 @@ async function loadNextOrderNumber() {
             );
 
 
-        if (
+        nextOrderNumber =
             rows &&
-            rows.length > 0
-        ) {
+            rows.length
 
-            nextOrderNumber =
-                Number(
+                ? Number(
                     rows[0]
                     .numero_orden
-                ) + 1;
+                ) + 1
 
-        } else {
-
-            nextOrderNumber = 1;
-
-        }
+                : 1;
 
 
         refreshOrderNumber();
@@ -740,14 +906,8 @@ async function loadNextOrderNumber() {
     } catch (error) {
 
         console.error(
-            "Error obteniendo número de orden:",
             error
         );
-
-
-        nextOrderNumber = 1;
-
-        refreshOrderNumber();
 
     }
 
@@ -760,7 +920,8 @@ function refreshOrderNumber() {
         `#${
             String(
                 nextOrderNumber
-            ).padStart(
+            )
+            .padStart(
                 3,
                 "0"
             )
@@ -769,172 +930,56 @@ function refreshOrderNumber() {
 }
 
 
-// ------------------------------------------------------
-// 13. VALIDAR STOCK ANTES DE VENDER
-// ------------------------------------------------------
-
-async function validateStock() {
-
-    const ids =
-        cart.map(
-            item =>
-                item.id
-        );
-
-
-    if (
-        ids.length === 0
-    ) {
-        return true;
-    }
-
-
-    const idsFilter =
-        ids.join(",");
-
-
-    const currentProducts =
-        await supabaseFetch(
-
-            `productos?select=id,nombre,stock&id=in.(${idsFilter})`
-
-        );
-
-
-    for (
-        const item of cart
-    ) {
-
-        const current =
-            currentProducts.find(
-                product =>
-                    Number(product.id) ===
-                    item.id
-            );
-
-
-        if (!current) {
-
-            throw new Error(
-                `Producto no encontrado: ${item.name}`
-            );
-
-        }
-
-
-        if (
-            Number(current.stock) <
-            item.qty
-        ) {
-
-            throw new Error(
-                `Stock insuficiente para ${item.name}. Disponible: ${current.stock}`
-            );
-
-        }
-
-    }
-
-
-    return true;
-
-}
-
-
-// ------------------------------------------------------
-// 14. DESCONTAR STOCK
-// ------------------------------------------------------
-
-async function discountStock(
-    productId,
-    quantity
-) {
-
-    const response =
-        await fetch(
-
-            `${SUPABASE_URL}/rest/v1/rpc/descontar_stock`,
-
-            {
-
-                method:
-                    "POST",
-
-                headers: {
-
-                    apikey:
-                        SUPABASE_KEY,
-
-                    "Content-Type":
-                        "application/json"
-
-                },
-
-                body:
-                    JSON.stringify({
-
-                        p_producto_id:
-                            productId,
-
-                        p_cantidad:
-                            quantity
-
-                    })
-
-            }
-
-        );
-
-
-    if (!response.ok) {
-
-        const errorText =
-            await response.text();
-
-
-        console.error(
-            "Error descontando stock:",
-            errorText
-        );
-
-
-        throw new Error(
-            errorText
-        );
-
-    }
-
-}
-
-
-// ------------------------------------------------------
-// 15. FINALIZAR ORDEN
-// ------------------------------------------------------
+// ======================================================
+// FINALIZAR PEDIDO
+// ======================================================
 
 async function finalizeOrder() {
 
-    if (cart.length === 0) {
+    if (
+        cart.length === 0
+    ) {
+
         return;
+
     }
 
 
-    finishOrderBtn.disabled = true;
+    finishOrderBtn.disabled =
+        true;
+
+
     finishOrderBtn.textContent =
-        "Procesando...";
+        "Registrando pedido...";
 
 
     try {
 
         const detalles =
-            cart.map(item => ({
+            cart.map(
+                item => ({
 
-                producto_id:
-                    item.id,
+                    producto_id:
+                        item.id,
 
-                cantidad:
-                    item.qty
+                    cantidad:
+                        item.qty
 
-            }));
+                })
+            );
+
+
+        const momentoPago =
+            paymentMoment.value;
+
+
+        const metodoPago =
+            momentoPago ===
+            "Antes"
+
+                ? paymentMethod.value
+
+                : null;
 
 
         const response =
@@ -960,8 +1005,11 @@ async function finalizeOrder() {
                     body:
                         JSON.stringify({
 
+                            p_momento_pago:
+                                momentoPago,
+
                             p_metodo_pago:
-                                paymentMethod.value,
+                                metodoPago,
 
                             p_detalles:
                                 detalles
@@ -973,46 +1021,48 @@ async function finalizeOrder() {
             );
 
 
-        const responseText =
+        const text =
             await response.text();
 
 
         if (!response.ok) {
 
             console.error(
-                "Error creando orden:",
-                responseText
+                text
             );
 
 
-            let mensaje =
-                "No se pudo finalizar la orden";
+            let message =
+                "No se pudo registrar el pedido";
 
 
             try {
 
                 const error =
                     JSON.parse(
-                        responseText
+                        text
                     );
 
 
-                if (error.message) {
-                    mensaje =
+                if (
+                    error.message
+                ) {
+
+                    message =
                         error.message;
+
                 }
 
-            } catch {
-                // Mantener mensaje general
-            }
+            } catch {}
 
 
             showToast(
-                mensaje
+                message
             );
 
 
             await loadProducts();
+
 
             return;
 
@@ -1021,14 +1071,8 @@ async function finalizeOrder() {
 
         const result =
             JSON.parse(
-                responseText
+                text
             );
-
-
-        console.log(
-            "Orden registrada:",
-            result
-        );
 
 
         const numero =
@@ -1041,54 +1085,67 @@ async function finalizeOrder() {
             );
 
 
-        // Limpiar carrito
+        const estadoPago =
+            result.estado_pago;
+
+
         cart = [];
 
 
         renderCart();
 
 
+        const pagoTexto =
+            estadoPago ===
+            "Pagado"
+
+                ? "PAGADO"
+
+                : "PAGO PENDIENTE";
+
+
         showToast(
 
-            `Orden #${
+            `Pedido #${
                 String(
                     numero
-                ).padStart(
+                )
+                .padStart(
                     3,
                     "0"
                 )
-            } finalizada — ${money(total)}`
+            } · ${pagoTexto} · ${money(total)}`
 
         );
 
 
-        // Actualizar productos, stock e historial
-        await loadProducts();
+        await Promise.all([
 
-        await loadNextOrderNumber();
+            loadProducts(),
 
-        await renderHistory();
+            loadNextOrderNumber(),
+
+            renderHistory()
+
+        ]);
 
 
     } catch (error) {
 
         console.error(
-            "Error inesperado:",
             error
         );
 
 
         showToast(
-            "No se pudo finalizar la orden"
+            "No se pudo registrar el pedido"
         );
 
-
-        await loadProducts();
 
     } finally {
 
         finishOrderBtn.textContent =
-            "Finalizar orden";
+            "Registrar pedido";
 
 
         finishOrderBtn.disabled =
@@ -1099,31 +1156,11 @@ async function finalizeOrder() {
 }
 
 
-// ------------------------------------------------------
-// 16. HISTORIAL
-// ------------------------------------------------------
+// ======================================================
+// HISTORIAL
+// ======================================================
 
 async function renderHistory() {
-
-    historyBody.innerHTML = `
-
-        <tr>
-
-            <td
-                colspan="5"
-                style="
-                    text-align:center;
-                    color:#777;
-                    padding:24px;
-                "
-            >
-                Cargando historial...
-            </td>
-
-        </tr>
-
-    `;
-
 
     try {
 
@@ -1138,8 +1175,10 @@ async function renderHistory() {
                 "numero_orden," +
                 "fecha," +
                 "total," +
-                "metodo_pago," +
                 "estado," +
+                "estado_pago," +
+                "metodo_pago," +
+
                 "detalle_orden(" +
                     "cantidad," +
                     "productos(nombre)" +
@@ -1162,19 +1201,21 @@ async function renderHistory() {
                 <tr>
 
                     <td
-                        colspan="5"
+                        colspan="6"
                         style="
                             text-align:center;
-                            color:#777;
                             padding:24px;
                         "
                     >
-                        Todavía no hay órdenes finalizadas.
+
+                        Todavía no existen pedidos.
+
                     </td>
 
                 </tr>
 
             `;
+
 
             return;
 
@@ -1183,150 +1224,145 @@ async function renderHistory() {
 
         historyBody.innerHTML =
             rows
-            .map(order => {
-
-                const date =
-                    new Date(
-                        order.fecha
-                    );
+            .map(
+                order => {
 
 
-                const time =
-                    date.toLocaleTimeString(
-                        "es-EC",
-                        {
+                    const time =
+                        new Date(
+                            order.fecha
+                        )
+                        .toLocaleTimeString(
+                            "es-EC",
+                            {
 
-                            hour:
-                                "2-digit",
+                                hour:
+                                    "2-digit",
 
-                            minute:
-                                "2-digit"
+                                minute:
+                                    "2-digit"
 
-                        }
-                    );
-
-
-                const itemText =
-                    (
-                        order.detalle_orden ||
-                        []
-                    )
-                    .map(detail => {
-
-                        const name =
-                            detail
-                            .productos
-                            ?.nombre ||
-                            "Producto";
-
-
-                        return (
-                            `${detail.cantidad}× ${name}`
+                            }
                         );
 
-                    })
-                    .join(", ");
+
+                    const items =
+                        (
+                            order.detalle_orden ||
+                            []
+                        )
+                        .map(
+                            detail => {
+
+                                const name =
+                                    detail
+                                    .productos
+                                    ?.nombre ||
+                                    "Producto";
 
 
-                return `
+                                return (
+                                    `${detail.cantidad}× ${name}`
+                                );
 
-                    <tr>
-
-                        <td>
-
-                            <strong>
-
-                                #${
-                                    String(
-                                        order.numero_orden
-                                    ).padStart(
-                                        3,
-                                        "0"
-                                    )
-                                }
-
-                            </strong>
-
-                        </td>
-
-
-                        <td>
-                            ${time}
-                        </td>
-
-
-                        <td>
-                            ${
-                                itemText ||
-                                "Sin detalle"
                             }
-                        </td>
+                        )
+                        .join(", ");
 
 
-                        <td>
-                            ${order.metodo_pago}
-                        </td>
+                    return `
+
+                        <tr>
 
 
-                        <td>
+                            <td>
 
-                            <strong>
+                                <strong>
+
+                                    #${
+                                        String(
+                                            order.numero_orden
+                                        )
+                                        .padStart(
+                                            3,
+                                            "0"
+                                        )
+                                    }
+
+                                </strong>
+
+                            </td>
+
+
+                            <td>
+                                ${time}
+                            </td>
+
+
+                            <td>
+                                ${items}
+                            </td>
+
+
+                            <td>
+                                ${order.estado}
+                            </td>
+
+
+                            <td>
 
                                 ${
-                                    money(
-                                        order.total
-                                    )
+                                    order.estado_pago ===
+                                    "Pagado"
+
+                                        ? "Pagado"
+
+                                        : "Pendiente"
                                 }
 
-                            </strong>
+                            </td>
 
-                        </td>
 
-                    </tr>
+                            <td>
 
-                `;
+                                <strong>
 
-            })
+                                    ${money(
+                                        order.total
+                                    )}
+
+                                </strong>
+
+                            </td>
+
+
+                        </tr>
+
+                    `;
+
+                }
+            )
             .join("");
 
 
     } catch (error) {
 
         console.error(
-            "Error cargando historial:",
             error
         );
-
-
-        historyBody.innerHTML = `
-
-            <tr>
-
-                <td
-                    colspan="5"
-                    style="
-                        text-align:center;
-                        color:#b33;
-                        padding:24px;
-                    "
-                >
-                    No se pudo cargar el historial.
-                </td>
-
-            </tr>
-
-        `;
 
     }
 
 }
 
 
-// ------------------------------------------------------
-// 17. MENSAJES
-// ------------------------------------------------------
+// ======================================================
+// MENSAJE
+// ======================================================
 
-function showToast(message) {
+function showToast(
+    message
+) {
 
     toast.textContent =
         message;
@@ -1340,22 +1376,27 @@ function showToast(message) {
     setTimeout(
         () => {
 
-            toast.classList.remove(
+            toast
+            .classList
+            .remove(
                 "show"
             );
 
         },
+
         3000
+
     );
 
 }
 
 
-// ------------------------------------------------------
-// 18. BOTONES
-// ------------------------------------------------------
+// ======================================================
+// EVENTOS
+// ======================================================
 
-clearCartBtn.addEventListener(
+clearCartBtn
+.addEventListener(
     "click",
     () => {
 
@@ -1367,28 +1408,16 @@ clearCartBtn.addEventListener(
 );
 
 
-finishOrderBtn.addEventListener(
+finishOrderBtn
+.addEventListener(
     "click",
     finalizeOrder
 );
 
 
-// ------------------------------------------------------
-// 19. HISTORIAL ONLINE
-// ------------------------------------------------------
-
-clearHistoryBtn.disabled = true;
-
-clearHistoryBtn.textContent =
-    "Historial online";
-
-clearHistoryBtn.title =
-    "Las ventas están guardadas en Supabase";
-
-
-// ------------------------------------------------------
-// 20. INICIAR APP
-// ------------------------------------------------------
+// ======================================================
+// INICIO
+// ======================================================
 
 async function init() {
 
@@ -1402,7 +1431,7 @@ async function init() {
     ) {
 
         alert(
-            "Configura SUPABASE_URL y SUPABASE_KEY en app.js."
+            "Configura Supabase en app.js."
         );
 
         return;
@@ -1413,28 +1442,15 @@ async function init() {
     renderCart();
 
 
-    try {
+    await Promise.all([
 
-        await loadProducts();
+        loadProducts(),
 
-        await loadNextOrderNumber();
+        loadNextOrderNumber(),
 
-        await renderHistory();
+        renderHistory()
 
-
-        console.log(
-            "DAKORI POS iniciado correctamente."
-        );
-
-
-    } catch (error) {
-
-        console.error(
-            "Error iniciando DAKORI POS:",
-            error
-        );
-
-    }
+    ]);
 
 }
 
