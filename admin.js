@@ -1,26 +1,23 @@
-// =====================================================
+// ======================================================
 // DAKORI ADMIN
-// Login + productos + inventario + ventas
-// =====================================================
+// Login + inventario + productos + ventas + caja
+// ======================================================
 
 
-// =====================================================
-// SUPABASE
-// =====================================================
-
+// ======================================================
+// CONFIGURACIÓN SUPABASE
+// ======================================================
 
 const SUPABASE_URL =
     "https://cveyhhgcljyxibqtgost.supabase.co";
-
 
 const SUPABASE_KEY =
     "sb_publishable_-8M32lNeLrCzFfLq319C8Q_bmZnBVB-";
 
 
-// =====================================================
+// ======================================================
 // SESIÓN
-// =====================================================
-
+// ======================================================
 
 function getStoredSession() {
 
@@ -41,10 +38,9 @@ function getStoredSession() {
 }
 
 
-// =====================================================
+// ======================================================
 // RENOVAR SESIÓN
-// =====================================================
-
+// ======================================================
 
 async function refreshSession() {
 
@@ -98,10 +94,6 @@ async function refreshSession() {
 
 
         if (!response.ok) {
-
-            console.error(
-                "No se pudo renovar sesión"
-            );
 
             return false;
 
@@ -163,10 +155,9 @@ async function refreshSession() {
 }
 
 
-// =====================================================
-// CERRAR SESIÓN
-// =====================================================
-
+// ======================================================
+// LOGOUT
+// ======================================================
 
 function logout() {
 
@@ -181,10 +172,9 @@ function logout() {
 }
 
 
-// =====================================================
-// VERIFICAR SESIÓN
-// =====================================================
-
+// ======================================================
+// VALIDAR SESIÓN
+// ======================================================
 
 async function requireAdminSession() {
 
@@ -204,8 +194,6 @@ async function requireAdminSession() {
 
     }
 
-
-    // Renovar si está próxima a vencer
 
     if (
         session.expires_at &&
@@ -313,10 +301,9 @@ async function requireAdminSession() {
 }
 
 
-// =====================================================
-// HEADERS SUPABASE
-// =====================================================
-
+// ======================================================
+// HEADERS
+// ======================================================
 
 function headers(extra = {}) {
 
@@ -344,10 +331,9 @@ function headers(extra = {}) {
 }
 
 
-// =====================================================
+// ======================================================
 // API
-// =====================================================
-
+// ======================================================
 
 async function api(
     path,
@@ -373,8 +359,6 @@ async function api(
 
         );
 
-
-    // Si expira token, intentamos una renovación
 
     if (
         response.status === 401
@@ -448,14 +432,13 @@ async function api(
 }
 
 
-// =====================================================
+// ======================================================
 // UTILIDADES
-// =====================================================
-
+// ======================================================
 
 function money(value) {
 
-    return `$${Number(value).toFixed(2)}`;
+    return `$${Number(value || 0).toFixed(2)}`;
 
 }
 
@@ -481,10 +464,64 @@ function getStockClass(stock) {
 }
 
 
-// =====================================================
-// CARGAR PRODUCTOS
-// =====================================================
+function escapeHtml(value) {
 
+    return String(value)
+
+        .replaceAll(
+            "&",
+            "&amp;"
+        )
+
+        .replaceAll(
+            "<",
+            "&lt;"
+        )
+
+        .replaceAll(
+            ">",
+            "&gt;"
+        )
+
+        .replaceAll(
+            '"',
+            "&quot;"
+        )
+
+        .replaceAll(
+            "'",
+            "&#039;"
+        );
+
+}
+
+
+function categoryOption(
+    category,
+    selected
+) {
+
+    return `
+
+        <option
+            value="${category}"
+            ${
+                category === selected
+                    ? "selected"
+                    : ""
+            }
+        >
+            ${category}
+        </option>
+
+    `;
+
+}
+
+
+// ======================================================
+// PRODUCTOS
+// ======================================================
 
 async function loadProducts() {
 
@@ -511,9 +548,11 @@ async function loadProducts() {
         ).length;
 
 
-    document.getElementById(
+    document
+    .getElementById(
         "activeProducts"
-    ).textContent =
+    )
+    .textContent =
         activeCount;
 
 
@@ -532,9 +571,11 @@ async function loadProducts() {
         );
 
 
-    document.getElementById(
+    document
+    .getElementById(
         "totalStock"
-    ).textContent =
+    )
+    .textContent =
         totalStock;
 
 
@@ -560,12 +601,6 @@ async function loadProducts() {
                     0
                 );
 
-
-            /*
-             * Usamos encodeURIComponent para
-             * pasar nombres de manera segura
-             * al botón Eliminar.
-             */
 
             const encodedName =
                 encodeURIComponent(
@@ -707,77 +742,9 @@ async function loadProducts() {
 }
 
 
-// =====================================================
-// ESCAPAR HTML
-// =====================================================
-
-
-function escapeHtml(value) {
-
-    return String(value)
-
-        .replaceAll(
-            "&",
-            "&amp;"
-        )
-
-        .replaceAll(
-            "<",
-            "&lt;"
-        )
-
-        .replaceAll(
-            ">",
-            "&gt;"
-        )
-
-        .replaceAll(
-            '"',
-            "&quot;"
-        )
-
-        .replaceAll(
-            "'",
-            "&#039;"
-        );
-
-}
-
-
-// =====================================================
-// OPCIONES DE CATEGORÍA
-// =====================================================
-
-
-function categoryOption(
-    category,
-    selected
-) {
-
-    return `
-
-        <option
-            value="${category}"
-            ${
-                category === selected
-                    ? "selected"
-                    : ""
-            }
-        >
-
-            ${category}
-
-        </option>
-
-    `;
-
-}
-
-
-// =====================================================
+// ======================================================
 // GUARDAR PRODUCTO
-// =====================================================
-
+// ======================================================
 
 async function saveProduct(id) {
 
@@ -821,7 +788,7 @@ async function saveProduct(id) {
     if (!nombre) {
 
         alert(
-            "El producto debe tener un nombre."
+            "El producto debe tener nombre."
         );
 
         return;
@@ -835,7 +802,7 @@ async function saveProduct(id) {
     ) {
 
         alert(
-            "El precio no es válido."
+            "Precio inválido."
         );
 
         return;
@@ -849,7 +816,7 @@ async function saveProduct(id) {
     ) {
 
         alert(
-            "El stock debe ser un número entero igual o mayor a 0."
+            "Stock inválido."
         );
 
         return;
@@ -891,7 +858,7 @@ async function saveProduct(id) {
 
 
         alert(
-            "Producto actualizado correctamente."
+            "Producto actualizado."
         );
 
 
@@ -906,7 +873,7 @@ async function saveProduct(id) {
 
 
         alert(
-            "No se pudo actualizar el producto."
+            "No se pudo actualizar."
         );
 
     }
@@ -914,10 +881,9 @@ async function saveProduct(id) {
 }
 
 
-// =====================================================
+// ======================================================
 // ACTIVAR / DESACTIVAR
-// =====================================================
-
+// ======================================================
 
 async function toggleProduct(
     id,
@@ -966,7 +932,7 @@ async function toggleProduct(
 
 
         alert(
-            "No se pudo cambiar el estado del producto."
+            "No se pudo cambiar el estado."
         );
 
     }
@@ -974,10 +940,9 @@ async function toggleProduct(
 }
 
 
-// =====================================================
+// ======================================================
 // ELIMINAR PRODUCTO
-// =====================================================
-
+// ======================================================
 
 async function deleteProduct(
     id,
@@ -995,11 +960,7 @@ async function deleteProduct(
 
             `¿Eliminar "${nombre}"?\n\n` +
 
-            `Esta acción no se puede deshacer.\n\n` +
-
-            `Si el producto ya forma parte de una venta, ` +
-
-            `el sistema puede impedir eliminarlo.`
+            `Esta acción no se puede deshacer.`
 
         );
 
@@ -1035,7 +996,7 @@ async function deleteProduct(
 
 
         alert(
-            "Producto eliminado correctamente."
+            "Producto eliminado."
         );
 
 
@@ -1045,18 +1006,15 @@ async function deleteProduct(
     } catch (error) {
 
         console.error(
-            "Error eliminando producto:",
             error
         );
 
 
         alert(
 
-            "No se pudo eliminar el producto.\n\n" +
+            "No se pudo eliminar.\n\n" +
 
-            "Probablemente tiene ventas asociadas. " +
-
-            "En ese caso utiliza Desactivar."
+            "Si tiene ventas asociadas, utiliza Desactivar."
 
         );
 
@@ -1065,10 +1023,9 @@ async function deleteProduct(
 }
 
 
-// =====================================================
+// ======================================================
 // AGREGAR PRODUCTO
-// =====================================================
-
+// ======================================================
 
 async function addProduct() {
 
@@ -1128,7 +1085,7 @@ async function addProduct() {
     if (!nombre) {
 
         alert(
-            "Ingresa el nombre del producto."
+            "Ingresa el nombre."
         );
 
         return;
@@ -1156,7 +1113,7 @@ async function addProduct() {
     ) {
 
         alert(
-            "El stock debe ser un número entero igual o mayor a 0."
+            "Ingresa un stock válido."
         );
 
         return;
@@ -1201,51 +1158,43 @@ async function addProduct() {
         );
 
 
-        // Limpiar formulario
-
-
         document
         .getElementById(
             "newName"
         )
-        .value =
-            "";
+        .value = "";
 
 
         document
         .getElementById(
             "newPrice"
         )
-        .value =
-            "";
+        .value = "";
 
 
         document
         .getElementById(
             "newStock"
         )
-        .value =
-            "0";
+        .value = "0";
 
 
         document
         .getElementById(
             "newSample"
         )
-        .value =
-            "false";
+        .value = "false";
 
 
         document
         .getElementById(
             "newActive"
         )
-        .value =
-            "true";
+        .value = "true";
 
 
         alert(
-            "Producto agregado correctamente."
+            "Producto agregado."
         );
 
 
@@ -1268,10 +1217,9 @@ async function addProduct() {
 }
 
 
-// =====================================================
-// CARGAR ÓRDENES
-// =====================================================
-
+// ======================================================
+// HISTORIAL GENERAL DE ÓRDENES
+// ======================================================
 
 async function loadOrders() {
 
@@ -1338,15 +1286,12 @@ async function loadOrders() {
                         color:#777;
                     "
                 >
-
                     Todavía no hay órdenes.
-
                 </td>
 
             </tr>
 
         `;
-
 
         return;
 
@@ -1370,7 +1315,6 @@ async function loadOrders() {
 
                 <tr>
 
-
                     <td>
 
                         <strong>
@@ -1389,29 +1333,21 @@ async function loadOrders() {
 
                     </td>
 
-
                     <td>
                         ${fecha}
                     </td>
-
 
                     <td>
                         ${order.metodo_pago}
                     </td>
 
-
                     <td>
 
                         <strong>
-
-                            ${money(
-                                order.total
-                            )}
-
+                            ${money(order.total)}
                         </strong>
 
                     </td>
-
 
                 </tr>
 
@@ -1423,10 +1359,616 @@ async function loadOrders() {
 }
 
 
-// =====================================================
-// EVENTOS
-// =====================================================
+// ======================================================
+// CAJA DEL DÍA
+// ======================================================
 
+async function loadDailyCash() {
+
+    const now =
+        new Date();
+
+
+    const start =
+        new Date(
+
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate(),
+
+            0,
+            0,
+            0,
+            0
+
+        );
+
+
+    const end =
+        new Date(
+
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate(),
+
+            23,
+            59,
+            59,
+            999
+
+        );
+
+
+    const orders =
+        await api(
+
+            "ordenes" +
+
+            "?select=" +
+
+            "id," +
+            "numero_orden," +
+            "fecha," +
+            "total," +
+            "metodo_pago," +
+
+            "detalle_orden(" +
+                "cantidad," +
+                "producto_id," +
+                "productos(nombre)" +
+            ")" +
+
+            `&fecha=gte.${encodeURIComponent(
+                start.toISOString()
+            )}` +
+
+            `&fecha=lte.${encodeURIComponent(
+                end.toISOString()
+            )}` +
+
+            "&order=fecha.desc"
+
+        );
+
+
+    const totalOrders =
+        orders.length;
+
+
+    const totalSales =
+        orders.reduce(
+
+            (sum, order) =>
+                sum +
+                Number(
+                    order.total
+                ),
+
+            0
+
+        );
+
+
+    const cash =
+        orders
+
+        .filter(
+            order =>
+                order.metodo_pago ===
+                "Efectivo"
+        )
+
+        .reduce(
+
+            (sum, order) =>
+                sum +
+                Number(
+                    order.total
+                ),
+
+            0
+
+        );
+
+
+    const transfer =
+        orders
+
+        .filter(
+            order =>
+                order.metodo_pago ===
+                "Transferencia"
+        )
+
+        .reduce(
+
+            (sum, order) =>
+                sum +
+                Number(
+                    order.total
+                ),
+
+            0
+
+        );
+
+
+    const card =
+        orders
+
+        .filter(
+            order =>
+                order.metodo_pago ===
+                "Tarjeta"
+        )
+
+        .reduce(
+
+            (sum, order) =>
+                sum +
+                Number(
+                    order.total
+                ),
+
+            0
+
+        );
+
+
+    document
+    .getElementById(
+        "todayOrders"
+    )
+    .textContent =
+        totalOrders;
+
+
+    document
+    .getElementById(
+        "todayTotal"
+    )
+    .textContent =
+        money(
+            totalSales
+        );
+
+
+    document
+    .getElementById(
+        "todayCash"
+    )
+    .textContent =
+        money(
+            cash
+        );
+
+
+    document
+    .getElementById(
+        "todayTransfer"
+    )
+    .textContent =
+        money(
+            transfer
+        );
+
+
+    document
+    .getElementById(
+        "todayCard"
+    )
+    .textContent =
+        money(
+            card
+        );
+
+
+    renderTopProducts(
+        orders
+    );
+
+
+    return {
+
+        totalOrders,
+        totalSales,
+        cash,
+        transfer,
+        card
+
+    };
+
+}
+
+
+// ======================================================
+// PRODUCTOS MÁS VENDIDOS
+// ======================================================
+
+function renderTopProducts(
+    orders
+) {
+
+    const totals = {};
+
+
+    orders.forEach(
+        order => {
+
+            (
+                order.detalle_orden ||
+                []
+            )
+            .forEach(
+                detail => {
+
+                    const name =
+                        detail
+                        .productos
+                        ?.nombre ||
+                        "Producto";
+
+
+                    if (!totals[name]) {
+
+                        totals[name] = 0;
+
+                    }
+
+
+                    totals[name] +=
+                        Number(
+                            detail.cantidad
+                        );
+
+                }
+            );
+
+        }
+    );
+
+
+    const ranking =
+        Object.entries(
+            totals
+        )
+
+        .sort(
+            (a, b) =>
+                b[1] - a[1]
+        )
+
+        .slice(
+            0,
+            5
+        );
+
+
+    const container =
+        document.getElementById(
+            "topProducts"
+        );
+
+
+    if (
+        ranking.length === 0
+    ) {
+
+        container.innerHTML =
+            "<p>No hay ventas registradas hoy.</p>";
+
+        return;
+
+    }
+
+
+    container.innerHTML =
+        ranking
+        .map(
+            (
+                [name, qty],
+                index
+            ) => `
+
+                <div class="ranking-row">
+
+                    <div>
+
+                        <span class="ranking-number">
+                            ${index + 1}
+                        </span>
+
+                        ${escapeHtml(name)}
+
+                    </div>
+
+
+                    <strong>
+                        ${qty} uds.
+                    </strong>
+
+                </div>
+
+            `
+        )
+        .join("");
+
+}
+
+
+// ======================================================
+// CERRAR CAJA
+// ======================================================
+
+async function closeCash() {
+
+    const confirmed =
+        confirm(
+
+            "¿Deseas cerrar la caja del día?\n\n" +
+
+            "Se guardará un resumen de las ventas actuales."
+
+        );
+
+
+    if (!confirmed) {
+
+        return;
+
+    }
+
+
+    const button =
+        document.getElementById(
+            "closeCashBtn"
+        );
+
+
+    button.disabled =
+        true;
+
+
+    button.textContent =
+        "Guardando cierre...";
+
+
+    try {
+
+        const summary =
+            await loadDailyCash();
+
+
+        if (
+            summary.totalOrders === 0
+        ) {
+
+            alert(
+                "No existen ventas para realizar un cierre."
+            );
+
+            return;
+
+        }
+
+
+        const session =
+            getStoredSession();
+
+
+        const email =
+            session
+            ?.user
+            ?.email ||
+            null;
+
+
+        await api(
+
+            "cierres_caja",
+
+            {
+
+                method:
+                    "POST",
+
+                headers: {
+
+                    Prefer:
+                        "return=minimal"
+
+                },
+
+                body:
+                    JSON.stringify({
+
+                        total_ventas:
+                            summary.totalSales,
+
+                        total_efectivo:
+                            summary.cash,
+
+                        total_transferencia:
+                            summary.transfer,
+
+                        total_tarjeta:
+                            summary.card,
+
+                        numero_ordenes:
+                            summary.totalOrders,
+
+                        usuario_email:
+                            email
+
+                    })
+
+            }
+
+        );
+
+
+        alert(
+            "Cierre de caja guardado correctamente."
+        );
+
+
+        await loadCashClosings();
+
+
+    } catch (error) {
+
+        console.error(
+            "Error cerrando caja:",
+            error
+        );
+
+
+        alert(
+            "No se pudo realizar el cierre de caja."
+        );
+
+
+    } finally {
+
+        button.disabled =
+            false;
+
+
+        button.textContent =
+            "Cerrar caja del día";
+
+    }
+
+}
+
+
+// ======================================================
+// HISTORIAL DE CIERRES
+// ======================================================
+
+async function loadCashClosings() {
+
+    const closings =
+        await api(
+
+            "cierres_caja" +
+            "?select=*" +
+            "&order=fecha.desc" +
+            "&limit=30"
+
+        );
+
+
+    const body =
+        document.getElementById(
+            "cashClosings"
+        );
+
+
+    if (
+        !closings ||
+        closings.length === 0
+    ) {
+
+        body.innerHTML = `
+
+            <tr>
+
+                <td
+                    colspan="7"
+                    style="
+                        text-align:center;
+                        padding:24px;
+                        color:#777;
+                    "
+                >
+                    Todavía no hay cierres de caja.
+                </td>
+
+            </tr>
+
+        `;
+
+        return;
+
+    }
+
+
+    body.innerHTML =
+        closings
+        .map(close => {
+
+            const date =
+                new Date(
+                    close.fecha
+                )
+                .toLocaleString(
+                    "es-EC"
+                );
+
+
+            return `
+
+                <tr>
+
+                    <td>
+                        ${date}
+                    </td>
+
+                    <td>
+                        ${close.numero_ordenes}
+                    </td>
+
+                    <td>
+                        ${money(
+                            close.total_efectivo
+                        )}
+                    </td>
+
+                    <td>
+                        ${money(
+                            close.total_transferencia
+                        )}
+                    </td>
+
+                    <td>
+                        ${money(
+                            close.total_tarjeta
+                        )}
+                    </td>
+
+                    <td>
+
+                        <strong>
+
+                            ${money(
+                                close.total_ventas
+                            )}
+
+                        </strong>
+
+                    </td>
+
+                    <td>
+                        ${
+                            close.usuario_email ||
+                            "-"
+                        }
+                    </td>
+
+                </tr>
+
+            `;
+
+        })
+        .join("");
+
+}
+
+
+// ======================================================
+// EVENTOS
+// ======================================================
 
 document
 .getElementById(
@@ -1448,13 +1990,21 @@ document
 );
 
 
-// =====================================================
-// INICIAR PANEL
-// =====================================================
+document
+.getElementById(
+    "closeCashBtn"
+)
+.addEventListener(
+    "click",
+    closeCash
+);
 
+
+// ======================================================
+// INICIALIZACIÓN
+// ======================================================
 
 async function initAdmin() {
-
 
     if (
         SUPABASE_URL.includes(
@@ -1491,7 +2041,11 @@ async function initAdmin() {
 
             loadProducts(),
 
-            loadOrders()
+            loadOrders(),
+
+            loadDailyCash(),
+
+            loadCashClosings()
 
         ]);
 
@@ -1510,7 +2064,7 @@ async function initAdmin() {
 
 
         alert(
-            "No se pudo cargar el panel de administración."
+            "No se pudo cargar completamente el panel de administración."
         );
 
     }
