@@ -1,5 +1,5 @@
-const SUPABASE_URL = "https://cveyhhgcljyxibqtgost.supabase.co";
-const SUPABASE_KEY = "sb_publishable_-8M32lNeLrCzFfLq319C8Q_bmZnBVB-";
+const SUPABASE_URL = "PEGA_AQUI_TU_PROJECT_URL";
+const SUPABASE_KEY = "PEGA_AQUI_TU_PUBLISHABLE_KEY";
 
 
 function headers(extra = {}) {
@@ -30,19 +30,26 @@ async function api(path, options = {}) {
 
         console.error(
             "Supabase error:",
+            response.status,
             text
         );
 
-        throw new Error(text);
+        throw new Error(
+            `Error ${response.status}: ${text}`
+        );
 
     }
 
 
     const text = await response.text();
 
-    return text
-        ? JSON.parse(text)
-        : null;
+
+    if (!text) {
+        return null;
+    }
+
+
+    return JSON.parse(text);
 
 }
 
@@ -50,6 +57,21 @@ async function api(path, options = {}) {
 function money(value) {
 
     return `$${Number(value).toFixed(2)}`;
+
+}
+
+
+function getStockClass(stock) {
+
+    if (stock === 0) {
+        return "stock-zero";
+    }
+
+    if (stock <= 5) {
+        return "stock-low";
+    }
+
+    return "";
 
 }
 
@@ -68,121 +90,188 @@ async function loadProducts() {
         );
 
 
+    const activeCount =
+        products.filter(
+            product => product.activo
+        ).length;
+
+
     document.getElementById(
         "activeProducts"
     ).textContent =
-        products.filter(
-            p => p.activo
-        ).length;
+        activeCount;
+
+
+    const totalStock =
+        products.reduce(
+            (total, product) =>
+                total +
+                Number(product.stock || 0),
+            0
+        );
+
+
+    document.getElementById(
+        "totalStock"
+    ).textContent =
+        totalStock;
+
+
+    if (products.length === 0) {
+
+        container.innerHTML =
+            "<p>No hay productos registrados.</p>";
+
+        return;
+
+    }
 
 
     container.innerHTML =
         products
-        .map(product => `
+        .map(product => {
 
-            <div class="product-row">
-
-                <input
-                    id="name-${product.id}"
-                    value="${product.nombre}"
-                >
+            const stock =
+                Number(
+                    product.stock || 0
+                );
 
 
-                <select
-                    id="category-${product.id}"
-                >
+            return `
 
-                    <option ${
-                        product.categoria === "Chicken"
-                        ? "selected"
-                        : ""
-                    }>
-                        Chicken
-                    </option>
+                <div class="product-row">
 
-                    <option ${
-                        product.categoria === "Ramen"
-                        ? "selected"
-                        : ""
-                    }>
-                        Ramen
-                    </option>
-
-                    <option ${
-                        product.categoria === "Bebidas"
-                        ? "selected"
-                        : ""
-                    }>
-                        Bebidas
-                    </option>
-
-                    <option ${
-                        product.categoria === "Snacks"
-                        ? "selected"
-                        : ""
-                    }>
-                        Snacks
-                    </option>
-
-                </select>
-
-
-                <input
-                    id="price-${product.id}"
-                    type="number"
-                    step="0.01"
-                    value="${product.precio}"
-                >
-
-
-                <span class="${
-                    product.activo
-                    ? "status-active"
-                    : "status-inactive"
-                }">
-
-                    ${
-                        product.activo
-                        ? "Activo"
-                        : "Inactivo"
-                    }
-
-                </span>
-
-
-                <div>
-
-                    <button
-                        class="admin-btn secondary"
-                        onclick="saveProduct(${product.id})"
+                    <input
+                        id="name-${product.id}"
+                        value="${product.nombre}"
                     >
-                        Guardar
-                    </button>
 
 
-                    <button
-                        class="admin-btn"
-                        onclick="
-                            toggleProduct(
-                                ${product.id},
-                                ${product.activo}
-                            )
-                        "
+                    <select
+                        id="category-${product.id}"
+                    >
+
+                        <option
+                            value="Chicken"
+                            ${
+                                product.categoria === "Chicken"
+                                ? "selected"
+                                : ""
+                            }
+                        >
+                            Chicken
+                        </option>
+
+
+                        <option
+                            value="Ramen"
+                            ${
+                                product.categoria === "Ramen"
+                                ? "selected"
+                                : ""
+                            }
+                        >
+                            Ramen
+                        </option>
+
+
+                        <option
+                            value="Bebidas"
+                            ${
+                                product.categoria === "Bebidas"
+                                ? "selected"
+                                : ""
+                            }
+                        >
+                            Bebidas
+                        </option>
+
+
+                        <option
+                            value="Snacks"
+                            ${
+                                product.categoria === "Snacks"
+                                ? "selected"
+                                : ""
+                            }
+                        >
+                            Snacks
+                        </option>
+
+                    </select>
+
+
+                    <input
+                        id="price-${product.id}"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value="${product.precio}"
+                    >
+
+
+                    <input
+                        id="stock-${product.id}"
+                        type="number"
+                        min="0"
+                        step="1"
+                        class="${getStockClass(stock)}"
+                        value="${stock}"
+                    >
+
+
+                    <span
+                        class="${
+                            product.activo
+                            ? "status-active"
+                            : "status-inactive"
+                        }"
                     >
 
                         ${
                             product.activo
-                            ? "Desactivar"
-                            : "Activar"
+                            ? "Activo"
+                            : "Inactivo"
                         }
 
-                    </button>
+                    </span>
+
+
+                    <div class="actions">
+
+                        <button
+                            class="admin-btn secondary"
+                            onclick="saveProduct(${product.id})"
+                        >
+                            Guardar
+                        </button>
+
+
+                        <button
+                            class="admin-btn warning"
+                            onclick="
+                                toggleProduct(
+                                    ${product.id},
+                                    ${product.activo}
+                                )
+                            "
+                        >
+
+                            ${
+                                product.activo
+                                ? "Desactivar"
+                                : "Activar"
+                            }
+
+                        </button>
+
+                    </div>
 
                 </div>
 
-            </div>
+            `;
 
-        `)
+        })
         .join("");
 
 }
@@ -191,58 +280,132 @@ async function loadProducts() {
 async function saveProduct(id) {
 
     const nombre =
-        document.getElementById(
+        document
+        .getElementById(
             `name-${id}`
-        ).value;
+        )
+        .value
+        .trim();
 
 
     const categoria =
-        document.getElementById(
+        document
+        .getElementById(
             `category-${id}`
-        ).value;
+        )
+        .value;
 
 
     const precio =
         Number(
-            document.getElementById(
+            document
+            .getElementById(
                 `price-${id}`
-            ).value
+            )
+            .value
         );
 
 
-    await api(
-        `productos?id=eq.${id}`,
-        {
-
-            method:
-                "PATCH",
-
-            headers: {
-
-                Prefer:
-                    "return=minimal"
-
-            },
-
-            body:
-                JSON.stringify({
-
-                    nombre,
-                    categoria,
-                    precio
-
-                })
-
-        }
-    );
+    const stock =
+        Number(
+            document
+            .getElementById(
+                `stock-${id}`
+            )
+            .value
+        );
 
 
-    alert(
-        "Producto actualizado"
-    );
+    if (!nombre) {
+
+        alert(
+            "El producto debe tener un nombre."
+        );
+
+        return;
+
+    }
 
 
-    loadProducts();
+    if (
+        Number.isNaN(precio) ||
+        precio < 0
+    ) {
+
+        alert(
+            "El precio no es válido."
+        );
+
+        return;
+
+    }
+
+
+    if (
+        !Number.isInteger(stock) ||
+        stock < 0
+    ) {
+
+        alert(
+            "El stock debe ser un número entero igual o mayor a 0."
+        );
+
+        return;
+
+    }
+
+
+    try {
+
+        await api(
+            `productos?id=eq.${id}`,
+            {
+
+                method:
+                    "PATCH",
+
+                headers: {
+
+                    Prefer:
+                        "return=minimal"
+
+                },
+
+                body:
+                    JSON.stringify({
+
+                        nombre,
+                        categoria,
+                        precio,
+                        stock
+
+                    })
+
+            }
+        );
+
+
+        alert(
+            "Producto actualizado correctamente."
+        );
+
+
+        await loadProducts();
+
+
+    } catch (error) {
+
+        console.error(
+            "Error actualizando producto:",
+            error
+        );
+
+
+        alert(
+            "No se pudo actualizar el producto."
+        );
+
+    }
 
 }
 
@@ -252,26 +415,50 @@ async function toggleProduct(
     currentStatus
 ) {
 
-    await api(
-        `productos?id=eq.${id}`,
-        {
+    try {
 
-            method:
-                "PATCH",
+        await api(
+            `productos?id=eq.${id}`,
+            {
 
-            body:
-                JSON.stringify({
+                method:
+                    "PATCH",
 
-                    activo:
-                        !currentStatus
+                headers: {
 
-                })
+                    Prefer:
+                        "return=minimal"
 
-        }
-    );
+                },
+
+                body:
+                    JSON.stringify({
+
+                        activo:
+                            !currentStatus
+
+                    })
+
+            }
+        );
 
 
-    loadProducts();
+        await loadProducts();
+
+
+    } catch (error) {
+
+        console.error(
+            "Error cambiando estado:",
+            error
+        );
+
+
+        alert(
+            "No se pudo cambiar el estado del producto."
+        );
+
+    }
 
 }
 
@@ -279,38 +466,62 @@ async function toggleProduct(
 async function addProduct() {
 
     const nombre =
-        document.getElementById(
+        document
+        .getElementById(
             "newName"
-        ).value.trim();
+        )
+        .value
+        .trim();
 
 
     const categoria =
-        document.getElementById(
+        document
+        .getElementById(
             "newCategory"
-        ).value;
+        )
+        .value;
 
 
     const precio =
         Number(
-            document.getElementById(
+            document
+            .getElementById(
                 "newPrice"
-            ).value
+            )
+            .value
+        );
+
+
+    const stock =
+        Number(
+            document
+            .getElementById(
+                "newStock"
+            )
+            .value
         );
 
 
     const sample =
-        document.getElementById(
+        document
+        .getElementById(
             "newSample"
-        ).value === "true";
+        )
+        .value === "true";
 
 
-    if (
-        !nombre ||
-        !precio
-    ) {
+    const activo =
+        document
+        .getElementById(
+            "newActive"
+        )
+        .value === "true";
+
+
+    if (!nombre) {
 
         alert(
-            "Completa nombre y precio."
+            "Ingresa el nombre del producto."
         );
 
         return;
@@ -318,49 +529,113 @@ async function addProduct() {
     }
 
 
-    await api(
-        "productos",
-        {
+    if (
+        Number.isNaN(precio) ||
+        precio < 0
+    ) {
 
-            method:
-                "POST",
+        alert(
+            "Ingresa un precio válido."
+        );
 
-            headers: {
+        return;
 
-                Prefer:
-                    "return=minimal"
-
-            },
-
-            body:
-                JSON.stringify({
-
-                    nombre,
-                    categoria,
-                    precio,
-                    activo:
-                        true,
-
-                    es_prueba:
-                        sample
-
-                })
-
-        }
-    );
+    }
 
 
-    document.getElementById(
-        "newName"
-    ).value = "";
+    if (
+        !Number.isInteger(stock) ||
+        stock < 0
+    ) {
+
+        alert(
+            "La cantidad debe ser un número entero igual o mayor a 0."
+        );
+
+        return;
+
+    }
 
 
-    document.getElementById(
-        "newPrice"
-    ).value = "";
+    try {
+
+        await api(
+            "productos",
+            {
+
+                method:
+                    "POST",
+
+                headers: {
+
+                    Prefer:
+                        "return=minimal"
+
+                },
+
+                body:
+                    JSON.stringify({
+
+                        nombre,
+                        categoria,
+                        precio,
+                        stock,
+                        activo,
+                        es_prueba:
+                            sample
+
+                    })
+
+            }
+        );
 
 
-    loadProducts();
+        document.getElementById(
+            "newName"
+        ).value = "";
+
+
+        document.getElementById(
+            "newPrice"
+        ).value = "";
+
+
+        document.getElementById(
+            "newStock"
+        ).value = "0";
+
+
+        document.getElementById(
+            "newSample"
+        ).value = "false";
+
+
+        document.getElementById(
+            "newActive"
+        ).value = "true";
+
+
+        alert(
+            "Producto agregado correctamente."
+        );
+
+
+        await loadProducts();
+
+
+    } catch (error) {
+
+        console.error(
+            "Error agregando producto:",
+            error
+        );
+
+
+        alert(
+            "No se pudo agregar el producto."
+        );
+
+    }
 
 }
 
@@ -373,7 +648,7 @@ async function loadOrders() {
             "ordenes" +
             "?select=*" +
             "&order=fecha.desc" +
-            "&limit=20"
+            "&limit=50"
 
         );
 
@@ -403,6 +678,32 @@ async function loadOrders() {
         document.getElementById(
             "adminOrders"
         );
+
+
+    if (orders.length === 0) {
+
+        body.innerHTML = `
+
+            <tr>
+
+                <td
+                    colspan="4"
+                    style="
+                        text-align:center;
+                        padding:24px;
+                        color:#777;
+                    "
+                >
+                    Todavía no hay órdenes.
+                </td>
+
+            </tr>
+
+        `;
+
+        return;
+
+    }
 
 
     body.innerHTML =
@@ -482,12 +783,36 @@ document
 
 async function initAdmin() {
 
+    if (
+        SUPABASE_URL.includes(
+            "PEGA_AQUI"
+        ) ||
+        SUPABASE_KEY.includes(
+            "PEGA_AQUI"
+        )
+    ) {
+
+        alert(
+            "Configura SUPABASE_URL y SUPABASE_KEY en admin.js."
+        );
+
+        return;
+
+    }
+
+
     try {
 
         await Promise.all([
             loadProducts(),
             loadOrders()
         ]);
+
+
+        console.log(
+            "DAKORI Admin cargado correctamente."
+        );
+
 
     } catch (error) {
 
@@ -496,8 +821,9 @@ async function initAdmin() {
             error
         );
 
+
         alert(
-            "No se pudo cargar el panel."
+            "No se pudo cargar el panel de administración."
         );
 
     }
