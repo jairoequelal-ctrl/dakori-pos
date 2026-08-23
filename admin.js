@@ -1,11 +1,11 @@
 // ======================================================
 // DAKORI ADMIN
-// Login + inventario + productos + ventas + caja
+// Login + productos + inventario + ventas + caja
 // ======================================================
 
 
 // ======================================================
-// CONFIGURACIÓN SUPABASE
+// CONFIGURACIÓN
 // ======================================================
 
 const SUPABASE_URL =
@@ -37,10 +37,6 @@ function getStoredSession() {
 
 }
 
-
-// ======================================================
-// RENOVAR SESIÓN
-// ======================================================
 
 async function refreshSession() {
 
@@ -155,10 +151,6 @@ async function refreshSession() {
 }
 
 
-// ======================================================
-// LOGOUT
-// ======================================================
-
 function logout() {
 
     localStorage.removeItem(
@@ -171,10 +163,6 @@ function logout() {
 
 }
 
-
-// ======================================================
-// VALIDAR SESIÓN
-// ======================================================
 
 async function requireAdminSession() {
 
@@ -302,7 +290,7 @@ async function requireAdminSession() {
 
 
 // ======================================================
-// HEADERS
+// API
 // ======================================================
 
 function headers(extra = {}) {
@@ -330,10 +318,6 @@ function headers(extra = {}) {
 
 }
 
-
-// ======================================================
-// API
-// ======================================================
 
 async function api(
     path,
@@ -443,6 +427,23 @@ function money(value) {
 }
 
 
+function escapeHtml(value) {
+
+    return String(value)
+
+        .replaceAll("&", "&amp;")
+
+        .replaceAll("<", "&lt;")
+
+        .replaceAll(">", "&gt;")
+
+        .replaceAll('"', "&quot;")
+
+        .replaceAll("'", "&#039;");
+
+}
+
+
 function getStockClass(stock) {
 
     if (stock === 0) {
@@ -460,38 +461,6 @@ function getStockClass(stock) {
 
 
     return "";
-
-}
-
-
-function escapeHtml(value) {
-
-    return String(value)
-
-        .replaceAll(
-            "&",
-            "&amp;"
-        )
-
-        .replaceAll(
-            "<",
-            "&lt;"
-        )
-
-        .replaceAll(
-            ">",
-            "&gt;"
-        )
-
-        .replaceAll(
-            '"',
-            "&quot;"
-        )
-
-        .replaceAll(
-            "'",
-            "&#039;"
-        );
 
 }
 
@@ -873,7 +842,7 @@ async function saveProduct(id) {
 
 
         alert(
-            "No se pudo actualizar."
+            "No se pudo actualizar el producto."
         );
 
     }
@@ -941,7 +910,7 @@ async function toggleProduct(
 
 
 // ======================================================
-// ELIMINAR PRODUCTO
+// ELIMINAR
 // ======================================================
 
 async function deleteProduct(
@@ -1218,7 +1187,7 @@ async function addProduct() {
 
 
 // ======================================================
-// HISTORIAL GENERAL DE ÓRDENES
+// HISTORIAL GENERAL
 // ======================================================
 
 async function loadOrders() {
@@ -1261,7 +1230,9 @@ async function loadOrders() {
         "totalSales"
     )
     .textContent =
-        money(total);
+        money(
+            total
+        );
 
 
     const body =
@@ -1286,12 +1257,15 @@ async function loadOrders() {
                         color:#777;
                     "
                 >
+
                     Todavía no hay órdenes.
+
                 </td>
 
             </tr>
 
         `;
+
 
         return;
 
@@ -1333,13 +1307,16 @@ async function loadOrders() {
 
                     </td>
 
+
                     <td>
                         ${fecha}
                     </td>
 
+
                     <td>
                         ${order.metodo_pago}
                     </td>
+
 
                     <td>
 
@@ -1570,6 +1547,7 @@ async function loadDailyCash() {
 
     return {
 
+        orders,
         totalOrders,
         totalSales,
         cash,
@@ -1697,27 +1675,193 @@ function renderTopProducts(
 
 
 // ======================================================
-// CERRAR CAJA
+// ÚLTIMO CIERRE
 // ======================================================
 
-async function closeCash() {
+async function getLastClosing() {
 
-    const confirmed =
-        confirm(
+    const closings =
+        await api(
 
-            "¿Deseas cerrar la caja del día?\n\n" +
-
-            "Se guardará un resumen de las ventas actuales."
+            "cierres_caja" +
+            "?select=*" +
+            "&order=fecha.desc" +
+            "&limit=1"
 
         );
 
 
-    if (!confirmed) {
+    if (
+        !closings ||
+        closings.length === 0
+    ) {
 
-        return;
+        return null;
 
     }
 
+
+    return closings[0];
+
+}
+
+
+// ======================================================
+// CAJA ABIERTA
+// ======================================================
+
+async function loadOpenCash() {
+
+    const lastClosing =
+        await getLastClosing();
+
+
+    let startDate;
+
+
+    if (
+        lastClosing &&
+        lastClosing.periodo_hasta
+    ) {
+
+        startDate =
+            new Date(
+                lastClosing.periodo_hasta
+            );
+
+    } else {
+
+        const now =
+            new Date();
+
+
+        startDate =
+            new Date(
+
+                now.getFullYear(),
+                now.getMonth(),
+                now.getDate(),
+
+                0,
+                0,
+                0,
+                0
+
+            );
+
+    }
+
+
+    const orders =
+        await api(
+
+            "ordenes" +
+
+            "?select=" +
+            "id," +
+            "numero_orden," +
+            "fecha," +
+            "total," +
+            "metodo_pago" +
+
+            `&fecha=gt.${encodeURIComponent(
+                startDate.toISOString()
+            )}` +
+
+            "&order=fecha.asc"
+
+        );
+
+
+    const total =
+        orders.reduce(
+
+            (sum, order) =>
+                sum +
+                Number(
+                    order.total
+                ),
+
+            0
+
+        );
+
+
+    document
+    .getElementById(
+        "openCashTotal"
+    )
+    .textContent =
+        money(
+            total
+        );
+
+
+    const info =
+        document.getElementById(
+            "lastClosingInfo"
+        );
+
+
+    if (
+        lastClosing &&
+        lastClosing.periodo_hasta
+    ) {
+
+        const fecha =
+            new Date(
+                lastClosing.periodo_hasta
+            )
+            .toLocaleString(
+                "es-EC"
+            );
+
+
+        info.innerHTML = `
+
+            Último cierre:
+            <strong>${fecha}</strong>
+
+            <br>
+
+            Ventas pendientes de cierre:
+            <strong>${orders.length}</strong>
+
+        `;
+
+    } else {
+
+        info.innerHTML = `
+
+            Todavía no existe un cierre de caja.
+
+            <br>
+
+            Ventas pendientes de cierre:
+            <strong>${orders.length}</strong>
+
+        `;
+
+    }
+
+
+    return {
+
+        orders,
+        total,
+        startDate,
+        lastClosing
+
+    };
+
+}
+
+
+// ======================================================
+// CERRAR CAJA
+// ======================================================
+
+async function closeCash() {
 
     const button =
         document.getElementById(
@@ -1730,26 +1874,145 @@ async function closeCash() {
 
 
     button.textContent =
-        "Guardando cierre...";
+        "Revisando caja...";
 
 
     try {
 
-        const summary =
-            await loadDailyCash();
+        const openCash =
+            await loadOpenCash();
 
 
         if (
-            summary.totalOrders === 0
+            openCash.orders.length === 0
         ) {
 
             alert(
-                "No existen ventas para realizar un cierre."
+
+                "No existen ventas nuevas desde el último cierre.\n\n" +
+
+                "No es necesario realizar otro cierre."
+
             );
+
 
             return;
 
         }
+
+
+        const totalSales =
+            openCash.orders.reduce(
+
+                (sum, order) =>
+                    sum +
+                    Number(
+                        order.total
+                    ),
+
+                0
+
+            );
+
+
+        const cash =
+            openCash.orders
+
+            .filter(
+                order =>
+                    order.metodo_pago ===
+                    "Efectivo"
+            )
+
+            .reduce(
+
+                (sum, order) =>
+                    sum +
+                    Number(
+                        order.total
+                    ),
+
+                0
+
+            );
+
+
+        const transfer =
+            openCash.orders
+
+            .filter(
+                order =>
+                    order.metodo_pago ===
+                    "Transferencia"
+            )
+
+            .reduce(
+
+                (sum, order) =>
+                    sum +
+                    Number(
+                        order.total
+                    ),
+
+                0
+
+            );
+
+
+        const card =
+            openCash.orders
+
+            .filter(
+                order =>
+                    order.metodo_pago ===
+                    "Tarjeta"
+            )
+
+            .reduce(
+
+                (sum, order) =>
+                    sum +
+                    Number(
+                        order.total
+                    ),
+
+                0
+
+            );
+
+
+        const message =
+
+            `CIERRE DE CAJA\n\n` +
+
+            `Órdenes: ${openCash.orders.length}\n\n` +
+
+            `Efectivo: ${money(cash)}\n` +
+
+            `Transferencia: ${money(transfer)}\n` +
+
+            `Tarjeta: ${money(card)}\n\n` +
+
+            `TOTAL: ${money(totalSales)}\n\n` +
+
+            `¿Confirmar cierre?`;
+
+
+        const confirmed =
+            confirm(
+                message
+            );
+
+
+        if (!confirmed) {
+
+            return;
+
+        }
+
+
+        button.textContent =
+            "Cerrando caja...";
 
 
         const session =
@@ -1761,6 +2024,10 @@ async function closeCash() {
             ?.user
             ?.email ||
             null;
+
+
+        const closingTime =
+            new Date();
 
 
         await api(
@@ -1783,22 +2050,34 @@ async function closeCash() {
                     JSON.stringify({
 
                         total_ventas:
-                            summary.totalSales,
+                            totalSales,
 
                         total_efectivo:
-                            summary.cash,
+                            cash,
 
                         total_transferencia:
-                            summary.transfer,
+                            transfer,
 
                         total_tarjeta:
-                            summary.card,
+                            card,
 
                         numero_ordenes:
-                            summary.totalOrders,
+                            openCash.orders.length,
 
                         usuario_email:
-                            email
+                            email,
+
+                        periodo_desde:
+                            openCash
+                            .startDate
+                            .toISOString(),
+
+                        periodo_hasta:
+                            closingTime
+                            .toISOString(),
+
+                        estado:
+                            "Cerrado"
 
                     })
 
@@ -1808,17 +2087,27 @@ async function closeCash() {
 
 
         alert(
-            "Cierre de caja guardado correctamente."
+            "Caja cerrada correctamente."
         );
 
 
-        await loadCashClosings();
+        await Promise.all([
+
+            loadDailyCash(),
+
+            loadOpenCash(),
+
+            loadCashClosings(),
+
+            loadOrders()
+
+        ]);
 
 
     } catch (error) {
 
         console.error(
-            "Error cerrando caja:",
+            "Error realizando cierre:",
             error
         );
 
@@ -1835,7 +2124,7 @@ async function closeCash() {
 
 
         button.textContent =
-            "Cerrar caja del día";
+            "Cerrar caja";
 
     }
 
@@ -1875,19 +2164,22 @@ async function loadCashClosings() {
             <tr>
 
                 <td
-                    colspan="7"
+                    colspan="9"
                     style="
                         text-align:center;
                         padding:24px;
                         color:#777;
                     "
                 >
+
                     Todavía no hay cierres de caja.
+
                 </td>
 
             </tr>
 
         `;
+
 
         return;
 
@@ -1898,7 +2190,8 @@ async function loadCashClosings() {
         closings
         .map(close => {
 
-            const date =
+
+            const closingDate =
                 new Date(
                     close.fecha
                 )
@@ -1907,17 +2200,52 @@ async function loadCashClosings() {
                 );
 
 
+            const desde =
+                close.periodo_desde
+                    ? new Date(
+                        close.periodo_desde
+                    )
+                    .toLocaleString(
+                        "es-EC"
+                    )
+                    : "-";
+
+
+            const hasta =
+                close.periodo_hasta
+                    ? new Date(
+                        close.periodo_hasta
+                    )
+                    .toLocaleString(
+                        "es-EC"
+                    )
+                    : "-";
+
+
             return `
 
                 <tr>
 
+
                     <td>
-                        ${date}
+                        ${closingDate}
                     </td>
+
+
+                    <td>
+                        ${desde}
+                    </td>
+
+
+                    <td>
+                        ${hasta}
+                    </td>
+
 
                     <td>
                         ${close.numero_ordenes}
                     </td>
+
 
                     <td>
                         ${money(
@@ -1925,17 +2253,20 @@ async function loadCashClosings() {
                         )}
                     </td>
 
+
                     <td>
                         ${money(
                             close.total_transferencia
                         )}
                     </td>
 
+
                     <td>
                         ${money(
                             close.total_tarjeta
                         )}
                     </td>
+
 
                     <td>
 
@@ -1949,12 +2280,16 @@ async function loadCashClosings() {
 
                     </td>
 
+
                     <td>
+
                         ${
                             close.usuario_email ||
                             "-"
                         }
+
                     </td>
+
 
                 </tr>
 
@@ -2001,7 +2336,7 @@ document
 
 
 // ======================================================
-// INICIALIZACIÓN
+// INICIO
 // ======================================================
 
 async function initAdmin() {
@@ -2018,6 +2353,7 @@ async function initAdmin() {
         alert(
             "Configura SUPABASE_URL y SUPABASE_KEY en admin.js."
         );
+
 
         return;
 
@@ -2044,6 +2380,8 @@ async function initAdmin() {
             loadOrders(),
 
             loadDailyCash(),
+
+            loadOpenCash(),
 
             loadCashClosings()
 

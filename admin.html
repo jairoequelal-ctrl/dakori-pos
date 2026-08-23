@@ -29,7 +29,7 @@
         }
 
         .admin-container {
-            max-width: 1350px;
+            max-width: 1400px;
             margin: 0 auto;
             padding: 28px;
         }
@@ -39,6 +39,7 @@
             border: 1px solid #eadfd8;
             border-radius: 18px;
             padding: 20px;
+
             box-shadow:
                 0 10px 28px
                 rgba(23,48,75,.08);
@@ -55,15 +56,13 @@
 
         .admin-grid {
             display: grid;
-            grid-template-columns:
-                1fr 1fr;
+            grid-template-columns: 1fr 1fr;
             gap: 22px;
         }
 
         .form-grid {
             display: grid;
-            grid-template-columns:
-                1fr 1fr;
+            grid-template-columns: 1fr 1fr;
             gap: 12px;
         }
 
@@ -125,6 +124,7 @@
         }
 
         .product-row {
+
             display: grid;
 
             grid-template-columns:
@@ -136,12 +136,12 @@
                 1.6fr;
 
             gap: 10px;
+
             align-items: center;
 
             padding: 12px 0;
 
-            border-bottom:
-                1px solid #eee;
+            border-bottom: 1px solid #eee;
         }
 
         .product-header {
@@ -172,139 +172,216 @@
         }
 
         .stats {
+
             display: grid;
+
             grid-template-columns:
                 repeat(4, 1fr);
+
             gap: 15px;
+
             margin-bottom: 22px;
         }
 
-        .stat {
-            background: #17304b;
-            color: white;
-            border-radius: 15px;
-            padding: 18px;
-        }
-
-        .stat span {
-            display: block;
-            opacity: .8;
-            font-size: .85rem;
-        }
-
-        .stat strong {
-            display: block;
-            margin-top: 6px;
-            font-size: 1.5rem;
-        }
-
         .cash-stats {
+
             display: grid;
 
             grid-template-columns:
-                repeat(5, 1fr);
+                repeat(6, 1fr);
 
             gap: 14px;
 
             margin-top: 18px;
         }
 
+        .stat {
+
+            background: #17304b;
+
+            color: white;
+
+            border-radius: 15px;
+
+            padding: 18px;
+        }
+
+        .stat span {
+
+            display: block;
+
+            opacity: .8;
+
+            font-size: .85rem;
+        }
+
+        .stat strong {
+
+            display: block;
+
+            margin-top: 6px;
+
+            font-size: 1.5rem;
+        }
+
+        .open-cash-stat {
+            background: #c7363d;
+        }
+
         .cash-grid {
+
             display: grid;
 
             grid-template-columns:
                 1fr 1fr;
 
-            gap: 25px;
+            gap: 28px;
 
-            margin-top: 26px;
+            margin-top: 28px;
+        }
+
+        .cash-info {
+
+            color: #666;
+
+            line-height: 1.6;
+        }
+
+        .last-closing-box {
+
+            background: #fff8f2;
+
+            border: 1px solid #eadfd8;
+
+            border-radius: 12px;
+
+            padding: 13px;
+
+            margin: 15px 0;
+
+            color: #17304b;
+
+            font-weight: 600;
         }
 
         .top-actions {
+
             display: flex;
+
             align-items: center;
+
             gap: 12px;
         }
 
         .top-actions a {
+
             color: white;
+
             text-decoration: none;
+
             font-weight: 700;
         }
 
         .logout-btn {
+
             border: 0;
+
             background: #ef7fa5;
+
             color: #17304b;
+
             padding: 10px 14px;
+
             border-radius: 10px;
+
             font-weight: 800;
+
             cursor: pointer;
         }
 
         .admin-user {
+
             font-size: .8rem;
+
             color: #d9e0e8;
+
             margin-top: 5px;
         }
 
         .ranking-row {
+
             display: flex;
+
             justify-content: space-between;
+
             align-items: center;
 
             padding: 11px 0;
 
-            border-bottom:
-                1px solid #eee;
+            border-bottom: 1px solid #eee;
         }
 
         .ranking-number {
+
             display: inline-flex;
 
-            justify-content: center;
             align-items: center;
 
+            justify-content: center;
+
             width: 28px;
+
             height: 28px;
 
-            background: #ef7fa5;
-            color: #17304b;
-
             border-radius: 50%;
+
+            background: #ef7fa5;
+
+            color: #17304b;
 
             font-weight: 800;
 
             margin-right: 8px;
         }
 
-        .cash-info {
-            color: #666;
-            line-height: 1.6;
-        }
-
         .history-table-wrap {
+
             overflow-x: auto;
         }
 
         table {
+
             width: 100%;
+
             border-collapse: collapse;
         }
 
         th,
         td {
+
             padding: 12px;
-            border-bottom:
-                1px solid #eee;
+
+            border-bottom: 1px solid #eee;
+
             text-align: left;
+
+            white-space: nowrap;
         }
 
         th {
             color: #17304b;
         }
 
-        @media(max-width: 1000px) {
+        @media(max-width: 1100px) {
+
+            .cash-stats {
+                grid-template-columns:
+                    repeat(3, 1fr);
+            }
+
+        }
+
+        @media(max-width: 950px) {
 
             .admin-grid {
                 grid-template-columns: 1fr;
@@ -314,24 +391,23 @@
                 grid-template-columns: 1fr;
             }
 
-            .cash-stats {
-                grid-template-columns:
-                    repeat(2, 1fr);
-            }
-
             .stats {
                 grid-template-columns:
                     repeat(2, 1fr);
             }
 
+            .cash-stats {
+                grid-template-columns:
+                    repeat(2, 1fr);
+            }
+
             .product-row {
+
                 grid-template-columns: 1fr;
 
-                border:
-                    1px solid #eee;
+                border: 1px solid #eee;
 
-                border-radius:
-                    14px;
+                border-radius: 14px;
 
                 padding: 14px;
 
@@ -554,6 +630,19 @@
             </div>
 
 
+            <div class="stat open-cash-stat">
+
+                <span>
+                    Desde último cierre
+                </span>
+
+                <strong id="openCashTotal">
+                    $0.00
+                </strong>
+
+            </div>
+
+
         </div>
 
 
@@ -580,20 +669,28 @@
                 </h3>
 
 
+                <div
+                    id="lastClosingInfo"
+                    class="last-closing-box"
+                >
+                    Buscando último cierre...
+                </div>
+
+
                 <p class="cash-info">
 
-                    El cierre guarda una fotografía del
-                    resumen actual de ventas del día.
+                    El cierre incluirá únicamente
+                    las ventas realizadas desde
+                    el último cierre registrado.
 
                 </p>
 
 
                 <p class="cash-info">
 
-                    Por ahora puedes continuar realizando
-                    ventas después de cerrar la caja.
-                    Más adelante podemos separar turnos
-                    y cierres por usuario.
+                    Si no existen nuevas ventas,
+                    el sistema no permitirá crear
+                    otro cierre.
 
                 </p>
 
@@ -602,7 +699,7 @@
                     id="closeCashBtn"
                     class="admin-btn primary"
                 >
-                    Cerrar caja del día
+                    Cerrar caja
                 </button>
 
             </div>
@@ -635,7 +732,15 @@
                     <tr>
 
                         <th>
-                            Fecha
+                            Cierre
+                        </th>
+
+                        <th>
+                            Desde
+                        </th>
+
+                        <th>
+                            Hasta
                         </th>
 
                         <th>
@@ -856,8 +961,8 @@
 
 
             <p>
-                Cuando llega a cero, el producto
-                aparecerá como
+                Cuando el stock llega a cero,
+                el producto aparece como
                 <strong>AGOTADO</strong>
                 en el POS.
             </p>
@@ -946,9 +1051,7 @@
 
         <div class="history-table-wrap">
 
-
             <table>
-
 
                 <thead>
 
@@ -979,9 +1082,7 @@
 
                 </tbody>
 
-
             </table>
-
 
         </div>
 
